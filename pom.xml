@@ -15,7 +15,7 @@
 					<descriptorRefs>
 						<descriptorRef>jar-with-dependencies</descriptorRef>
 					</descriptorRefs>
-					<finalName>roundup</finalName>
+					<finalName>roundUp</finalName>
 				</configuration>
 			</plugin>
 		</plugins>
