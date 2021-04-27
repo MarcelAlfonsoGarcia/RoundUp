@@ -1,0 +1,37 @@
+CREATE TABLE users (
+      uID SERIAL NOT NULL PRIMARY KEY,
+      firstName VARCHAR(50) NOT NULL,
+      lastName VARCHAR(50) NOT NULL,
+      email VARCHAR(150) NOT NULL,
+      campus VARCHAR(3)
+      UNIQUE(email)
+);
+
+INSERT INTO users (
+    uID,
+    firstName,
+    lastName,
+    email,
+    campus)
+VALUES (3, 'Marcel', 'Alfonso Garcia', 'magb2017@mymail.pomona.edu', 'POM')
+
+INSERT INTO users (
+    firstName,
+    lastName,
+    email,
+    campus)
+VALUES ('Jennifer', 'Zecena', 'zecena22@students.claremontmckenna.edu', 'CMC')
+
+INSERT INTO users (
+    firstName,
+    lastName,
+    email,
+    campus)
+VALUES ('Pei Pei', 'Barth Wu', 'mbpa2018@mymail.pomona.edu', 'POM')
+
+INSERT INTO users (
+    firstName,
+    lastName,
+    email,
+    campus)
+VALUES ('Hussein', 'Faara', 'hfaa2017@mymail.pomona.edu', 'POM')
