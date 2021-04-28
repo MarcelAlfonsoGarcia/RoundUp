@@ -166,12 +166,12 @@ public class DAL {
 	 * 
 	 *         This method will update all the fields in the database for a specific
 	 *         user.
-	 *         
+	 * 
 	 *         Query results will be transformed into JSON with the
 	 *         userJsonTransformer method
 	 */
 	public JSONObject updateUser(int userId, String firstName, String lastName, String email, String campus) {
-
+		// TODO: check that the new email is not already in use
 		if (firstName == null || firstName.isEmpty()) {
 			throw new IllegalArgumentException("First Name cannot be left empty");
 		} else if (lastName == null || lastName.isEmpty()) {
@@ -229,8 +229,8 @@ public class DAL {
 			throw new IllegalArgumentException("Poster Name cannot be left empty");
 		}
 
-		try (Statement s = c.createStatement()){
-			
+		try (Statement s = c.createStatement()) {
+
 			String check = "EXISTS (SELECT 1 FROM events WHERE uID = " + userId + " AND name = " + name + ");";
 
 			// if check returns true then throw error
@@ -239,15 +239,16 @@ public class DAL {
 			} else {
 				StringBuilder query = new StringBuilder(
 						"INSERT INTO events (owner, eventTime, posterUrl, name, description, location, popularity, status) VALUES (");
-				query.append(userId).append(", ").append(eventTime).append(", ").append(posterUrl).append(", ").append(name)
-						.append(", ").append(description).append(", ").append(location).append(") RETURNING *;");
-				
+				query.append(userId).append(", ").append(eventTime).append(", ").append(posterUrl).append(", ")
+						.append(name).append(", ").append(description).append(", ").append(location)
+						.append(") RETURNING *;");
+
 				ResultSet rs = s.executeQuery(query.toString());
 				int eventId = rs.getInt(rs.getInt("eID"));
 
 				String tagInsert = "";
 				for (String tag : tags) {
-					 tagInsert = "INSERT INTO tags (event, tag) VALUES (" + eventId + ", " + tag + ");";
+					tagInsert = "INSERT INTO tags (event, tag) VALUES (" + eventId + ", " + tag + ");";
 					s.addBatch(tagInsert);
 				}
 				s.executeBatch();

@@ -9,7 +9,9 @@ import java.util.List;
 import org.json.simple.JSONObject;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.ExpectedException;
 
 public class TestDAL {
 
@@ -100,6 +102,9 @@ public class TestDAL {
 	@AfterClass
 	public static void tearDownAfterClass() throws Exception {
 	}
+	
+	@Rule
+	public ExpectedException exceptionRule = ExpectedException.none();
 
 	@Test
 	public void createValidUser() {
@@ -109,17 +114,28 @@ public class TestDAL {
 	
 	@Test
 	public void createNullNameUser() {
+		exceptionRule.expect(IllegalArgumentException.class);
+		exceptionRule.expectMessage("First Name cannot be left empty");
 		dal.createUser("", USR_ONE_SECOND_NAME, USR_ONE_EMAIL, USR_ONE_CAMPUS);
+
+		exceptionRule.expect(IllegalArgumentException.class);
+		exceptionRule.expectMessage("Last Name cannot be left empty");
 		dal.createUser(USR_ONE_FIRST_NAME, "", USR_ONE_EMAIL, USR_ONE_CAMPUS);
 	}
 	
 	@Test
 	public void createNullEmailUser() {
+		exceptionRule.expect(IllegalArgumentException.class);
+		exceptionRule.expectMessage("Email cannot be left empty");
+		
 		dal.createUser(USR_ONE_FIRST_NAME, USR_ONE_SECOND_NAME, "", USR_ONE_CAMPUS);
 	}
 	
 	@Test
 	public void createExistingUser() {
+		exceptionRule.expect(IllegalArgumentException.class);
+		exceptionRule.expectMessage("The email provided is already in use");
+		
 		dal.createUser(USR_ONE_FIRST_NAME, USR_ONE_SECOND_NAME, USR_ONE_EMAIL, USR_ONE_CAMPUS);
 	}
 
@@ -130,9 +146,25 @@ public class TestDAL {
 
 	@Test
 	public void retrieveUnknownUser() {
+		exceptionRule.expect(IllegalArgumentException.class);
+		exceptionRule.expectMessage("No user exists under the provided information");
+		
 		dal.retrieveUser(0);
 	}
+	
+	@Test
+	public void deleteExistingUser() {
+		dal.deleteUser(1);
+	}
 
+	@Test
+	public void deleteUnknownUser() {
+		exceptionRule.expect(IllegalArgumentException.class);
+		exceptionRule.expectMessage("No user exists under the provided information");
+		
+		dal.deleteUser(0);
+	}
+	
 	@SuppressWarnings("unchecked")
 	@Test
 	public void updateExistingUser() {
@@ -148,18 +180,39 @@ public class TestDAL {
 	}
 	
 	@Test
+	public void updateUnknownUser() {
+		exceptionRule.expect(IllegalArgumentException.class);
+		exceptionRule.expectMessage("No user exists under the provided information");
+		
+		dal.updateUser(0, USR_ONE_FIRST_NAME, USR_ONE_SECOND_NAME, "", USR_ONE_CAMPUS);
+	}
+	
+	@Test
 	public void updateUserNullName() {
+		exceptionRule.expect(IllegalArgumentException.class);
+		exceptionRule.expectMessage("First Name cannot be left empty");
+		
 		dal.updateUser(usrOneId, "", USR_ONE_SECOND_NAME, USR_ONE_EMAIL, USR_ONE_CAMPUS);
+		
+		exceptionRule.expect(IllegalArgumentException.class);
+		exceptionRule.expectMessage("Last Name cannot be left empty");
+		
 		dal.updateUser(usrOneId, USR_ONE_FIRST_NAME, "", USR_ONE_EMAIL, USR_ONE_CAMPUS);
 	}
 	
 	@Test
 	public void updateUserNullEmail() {
+		exceptionRule.expect(IllegalArgumentException.class);
+		exceptionRule.expectMessage("Email cannot be left empty");
+		
 		dal.updateUser(usrOneId, USR_ONE_FIRST_NAME, USR_ONE_SECOND_NAME, "", USR_ONE_CAMPUS);
 	}
 	
 	@Test
 	public void updateUserExistingEmail() {
+		exceptionRule.expect(IllegalArgumentException.class);
+		exceptionRule.expectMessage("The email provided is already in use");
+		
 		dal.updateUser(usrOneId, USR_ONE_FIRST_NAME, USR_ONE_SECOND_NAME, USR_ONE_EMAIL, USR_ONE_CAMPUS);
 	}
 
