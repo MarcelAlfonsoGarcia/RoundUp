@@ -14,6 +14,8 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.sql.Timestamp;
 import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 import org.json.simple.JSONObject;
 import org.json.simple.JSONArray;
@@ -68,22 +70,6 @@ public class DAL {
 	 *         the userId
 	 * 
 	 *         This method will create the user in the database through data input.
-	 * 
-	 *         Check that the firstName, lastName, and email fields are not null If
-	 *         so return a JSON error message saying that the fields cannot be left
-	 *         empty Check that the email does not already exist in the database, we
-	 *         do so by running the boolean query: EXISTS (SELECT 1 FROM users WHERE
-	 *         email = email) If true, return error message saying that the email is
-	 *         already in use If false, attempt to create the new user in the table
-	 *         with the given data INSERT INTO users (firstName, lastName, email,
-	 *         campus,) VALUES (firstName, lastName, email, campus) Transform
-	 *         information into JSONObject and return
-	 * 
-	 *         To return the user, we will have to run a SELECT query with the
-	 *         specific user info
-	 * 
-	 *         Query results will be transformed into JSON with the
-	 *         userJsonTransformer method
 	 */
 	public JSONObject createUser(String firstName, String lastName, String email, String campus) {
 
@@ -94,23 +80,25 @@ public class DAL {
 		} else if (email == null || email.isEmpty()) {
 			throw new IllegalArgumentException("Email cannot be left empty");
 		}
-		
-		Statement s = null;
-		try {
-			s = c.createStatement();
-			String check = "EXISTS (SELECT 1 FROM users WHERE email = " + email + ");";
-			
-			StringBuilder query = new StringBuilder("INSERT INTO users (firstName, lastName, email, campus) VALUES (");
-			query.append(firstName).append(", ").append(lastName).append(", ").append(email).append(", ").append(campus)
-					.append(") RETURNING *;");
 
-			ResultSet userResult = s.executeQuery(query.toString());
-			s.close();
-			return userJsonTransformer(userResult);
+		try (Statement s = c.createStatement()) {
+			String check = "EXISTS (SELECT 1 FROM users WHERE email = " + email + ");";
+
+			// if check returns true then throw error
+			if (check.isEmpty()) {
+				throw new IllegalArgumentException("The email provided is already in use");
+			} else {
+				StringBuilder query = new StringBuilder(
+						"INSERT INTO users (firstName, lastName, email, campus) VALUES (");
+				query.append(firstName).append(", ").append(lastName).append(", ").append(email).append(", ")
+						.append(campus).append(") RETURNING *;");
+
+				ResultSet userResult = s.executeQuery(query.toString());
+				return userJsonTransformer(userResult);
+			}
 		} catch (SQLException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
-			throw new IllegalArgumentException("First Name cannot be left empty");
+			throw new IllegalArgumentException("Cannot create user in the database: " + e.getMessage());
 		}
 	}
 
@@ -121,31 +109,26 @@ public class DAL {
 	 *         This method will obtain all the user information stored in the user
 	 *         table of the database.
 	 * 
-	 *         Check that the user exists in the database, we do so by running the
-	 *         boolean query: EXISTS (SELECT 1 FROM users WHERE uID = userId) If
-	 *         false, return error message saying that the user does not exist If
-	 *         true, run a query to retrieve the user from the database SELECT *
-	 *         FROM users WHERE uID = userId Transform information into JSONObject
-	 *         and return
-	 * 
 	 *         Query results will be transformed into JSON with the
 	 *         userJsonTransformer method
 	 */
 	public JSONObject retrieveUser(int userId) {
-		Statement s = null;
 
-		try {
-			s = c.createStatement();
+		try (Statement s = c.createStatement()) {
+
 			String check = "EXISTS (SELECT 1 FROM users WHERE uID = " + userId + ");";
 
-			ResultSet userResult = s.executeQuery("SELECT * FROM users WHERE uID = " + userId);
-			s.close();
+			// if check returns false then throw error
+			if (!check.isEmpty()) {
+				throw new IllegalArgumentException("No user exists under the provided information");
+			} else {
+				ResultSet userResult = s.executeQuery("SELECT * FROM users WHERE uID = " + userId);
 
-			return userJsonTransformer(userResult);
+				return userJsonTransformer(userResult);
+			}
 		} catch (SQLException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
-			throw new IllegalArgumentException("First Name cannot be left empty");
+			throw new IllegalArgumentException("Could not retrieve user from the database: " + e.getMessage());
 		}
 	}
 
@@ -154,26 +137,21 @@ public class DAL {
 	 * @return nothing
 	 * 
 	 *         This method will delete a user from the database
-	 * 
-	 *         Check that the user to be deleted exists by running the query: EXISTS
-	 *         (SELECT 1 FROM users WHERE uID = userId) If false, return an error
-	 *         message saying that the user does not exist If true, run a query to
-	 *         remove the user from the database DELETE FROM users WHERE uID =
-	 *         userId And return a message informing that the user was deleted
 	 */
 	public void deleteUser(int userId) {
-		Statement s = null;
-
-		try {
-			s = c.createStatement();
+		try (Statement s = c.createStatement()) {
 			String check = "EXISTS (SELECT 1 FROM users WHERE uID = " + userId + ");";
 
-			s.executeUpdate("DELETE FROM users WHERE uID = " + userId);
-			s.close();
+			// if check returns false then throw error
+			if (!check.isEmpty()) {
+				throw new IllegalArgumentException("No user exists under the provided information");
+			} else {
+				s.executeUpdate("DELETE FROM users WHERE uID = " + userId);
+			}
 		} catch (SQLException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
-			throw new IllegalArgumentException("First Name cannot be left empty");
+			throw new IllegalArgumentException("Could not delete user from the datbase: " + e.getMessage());
 		}
 	}
 
@@ -188,26 +166,12 @@ public class DAL {
 	 * 
 	 *         This method will update all the fields in the database for a specific
 	 *         user.
-	 * 
-	 *         Check that the firstName, lastName, and email are not empty if so,
-	 *         return an error message saying they can't be empty Check that the new
-	 *         email isn't in use, do so by running the query EXISTS (SELECT 1 FROM
-	 *         users WHERE email = email) if so, return an error message saying that
-	 *         the email is in use Otherwise, check that the user exists by running
-	 *         the query: EXISTS (SELECT 1 FROM users WHERE uID = userId) If false,
-	 *         return an errror message saying that the user does not exist If true,
-	 *         run the query: UPDATE users SET firstName = firstName, lastName =
-	 *         lastName, .... WHERE uID = userId Transform information into
-	 *         JSONObject and return
-	 * 
-	 *         To return the user, we will have to run a SELECT query with the
-	 *         specific user info
-	 * 
+	 *         
 	 *         Query results will be transformed into JSON with the
 	 *         userJsonTransformer method
 	 */
 	public JSONObject updateUser(int userId, String firstName, String lastName, String email, String campus) {
-		
+
 		if (firstName == null || firstName.isEmpty()) {
 			throw new IllegalArgumentException("First Name cannot be left empty");
 		} else if (lastName == null || lastName.isEmpty()) {
@@ -215,26 +179,27 @@ public class DAL {
 		} else if (email == null || email.isEmpty()) {
 			throw new IllegalArgumentException("Email cannot be left empty");
 		}
-		
-		Statement s = null;
-		try {
-			s = c.createStatement();
+
+		try (Statement s = c.createStatement()) {
 			String check = "EXISTS (SELECT 1 FROM users WHERE uID = " + userId + ");";
 
-			StringBuilder query = new StringBuilder("UPDATE users SET ");
-			query.append(firstName).append(", ").append(lastName).append(", ").append(email).append(", ").append(campus)
-					.append(") ");
-			query.append("WHERE uID =" + userId);
-			query.append(" RETURNING *;");
+			// if check returns false then throw error
+			if (!check.isEmpty()) {
+				throw new IllegalArgumentException("No user exists under the provided information");
+			} else {
+				StringBuilder query = new StringBuilder("UPDATE users SET ");
+				query.append(firstName).append(", ").append(lastName).append(", ").append(email).append(", ")
+						.append(campus).append(") ");
+				query.append("WHERE uID =" + userId);
+				query.append(" RETURNING *;");
 
-			ResultSet rs = s.executeQuery(query.toString());
-			s.close();
+				ResultSet rs = s.executeQuery(query.toString());
 
-			return userJsonTransformer(rs);
+				return userJsonTransformer(rs);
+			}
 		} catch (SQLException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
-			throw new IllegalArgumentException("First Name cannot be left empty");
+			throw new IllegalArgumentException("Could not update user in the database: " + e.getMessage());
 		}
 	}
 
@@ -250,25 +215,12 @@ public class DAL {
 	 * 
 	 *         This method will create the event in the database through data input.
 	 * 
-	 *         Check that the posterUrl, name, and eventTime are not empty, if so
-	 *         return error Check that the tags are not repeating, if so return an
-	 *         error Check that the same event has not been created twice EXISTS
-	 *         (SELECT 1 FROM events WHERE uID = userId AND name = name) Attempt to
-	 *         create the new event in the table with the given data INSERT INTO
-	 *         events (uID, description, eventTime, poster, name, location) VALUES
-	 *         (uID, description, eventTime, poster, name, location) AND INSERT INTO
-	 *         tags(tag, eID) VALUES(tags. eventID) Transform information into
-	 *         JSONObject and return
-	 * 
-	 *         To return the event, we will have to run a SELECT query with the
-	 *         specific event info
-	 * 
 	 *         Query results will be transformed into JSON with the
 	 *         eventJsonTransformer method
 	 */
 	public JSONObject createEvent(int userId, Timestamp eventTime, String posterUrl, String name, String description,
-			String location, List<String> tags) {
-		
+			String location, Set<String> tags) {
+
 		if (eventTime == null) {
 			throw new IllegalArgumentException("Event Time cannot be left empty");
 		} else if (posterUrl == null || posterUrl.isEmpty()) {
@@ -276,31 +228,36 @@ public class DAL {
 		} else if (name == null || name.isEmpty()) {
 			throw new IllegalArgumentException("Poster Name cannot be left empty");
 		}
-		
-		Statement s = null;
 
-		try {
-			s = c.createStatement();
-			StringBuilder query = new StringBuilder(
-					"INSERT INTO events (owner, eventTime, posterUrl, name, description, location, popularity, status) VALUES (");
-			query.append(userId).append(", ").append(eventTime).append(", ").append(posterUrl).append(", ").append(name)
-					.append(", ").append(description).append(", ").append(location).append(") RETURNING *;");
+		try (Statement s = c.createStatement()){
+			
+			String check = "EXISTS (SELECT 1 FROM events WHERE uID = " + userId + " AND name = " + name + ");";
 
-			ResultSet rs = s.executeQuery(query.toString());
-			int eventId = rs.getInt(rs.getInt("eID"));
+			// if check returns true then throw error
+			if (check.isEmpty()) {
+				throw new IllegalArgumentException("Cannot create duplicate event");
+			} else {
+				StringBuilder query = new StringBuilder(
+						"INSERT INTO events (owner, eventTime, posterUrl, name, description, location, popularity, status) VALUES (");
+				query.append(userId).append(", ").append(eventTime).append(", ").append(posterUrl).append(", ").append(name)
+						.append(", ").append(description).append(", ").append(location).append(") RETURNING *;");
+				
+				ResultSet rs = s.executeQuery(query.toString());
+				int eventId = rs.getInt(rs.getInt("eID"));
 
-			for (String tag : tags) {
-				String tagInsert = "INSERT INTO tags (event, tag) VALUES (" + eventId + ", " + tag + ");";
-				s.executeUpdate(tagInsert);
+				String tagInsert = "";
+				for (String tag : tags) {
+					 tagInsert = "INSERT INTO tags (event, tag) VALUES (" + eventId + ", " + tag + ");";
+					s.addBatch(tagInsert);
+				}
+				s.executeBatch();
+
+				return eventJsonTransformer(rs);
 			}
-
-			s.close();
-			return eventJsonTransformer(rs);
 		} catch (SQLException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
+			throw new IllegalArgumentException("Could not add event to the database: " + e.getMessage());
 		}
-		return null;
 	}
 
 	/**
@@ -762,7 +719,7 @@ public class DAL {
 		user.put("lastName", rs.getString("firstName"));
 		user.put("email", rs.getString("email"));
 		user.put("campus", rs.getString("campus"));
-		
+
 		rs.close();
 		return user;
 	}
@@ -789,7 +746,7 @@ public class DAL {
 		event.put("location", rs.getString("location"));
 		event.put("popularity", rs.getInt("popularity"));
 		event.put("status", rs.getString("status"));
-		
+
 		rs.close();
 		return event;
 	}
