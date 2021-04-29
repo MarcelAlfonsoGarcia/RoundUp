@@ -355,8 +355,8 @@ public class DAL {
 				throw new IllegalArgumentException("Cannot find target event");
 			} else {
 				StringBuilder query = new StringBuilder("UPDATE users SET ");
-				query.append(eventTime).append(", ").append(name).append(", ")
-						.append(description).append(", ").append(location);
+				query.append(eventTime).append(", ").append(name).append(", ").append(description).append(", ")
+						.append(location);
 				query.append("WHERE eID =" + userId).append(" AND owner = " + userId);
 				query.append(" RETURNING *;");
 
@@ -393,7 +393,14 @@ public class DAL {
 	 *         >= fromTime AND eventTime <= toTime
 	 */
 	public void updateEventStatus(String status, Timestamp fromTime, Timestamp toTime) {
-
+		try (Statement s = c.createStatement()) {
+			String query = "UPDATE events SET status = " + status + " WHERE eventTime BETWEEN " + fromTime + " AND "
+					+ toTime + ";";
+			s.executeUpdate(query);
+		} catch (SQLException e) {
+			e.printStackTrace();
+			throw new NullPointerException("Could not retrieve events by time from the database: " + e.getMessage());
+		}
 	}
 
 	/**
@@ -424,11 +431,9 @@ public class DAL {
 
 			return tags;
 		} catch (SQLException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
+			throw new NullPointerException("Could not retrieve the tags from the database: " + e.getMessage());
 		}
-
-		return null;
 	}
 
 	/**
@@ -448,22 +453,23 @@ public class DAL {
 	 *         Creating the JSON will be done through the eventListJsonTransformer
 	 *         method
 	 */
-	public JSONObject retrieveEventsByTag(List<String> tags, String status) {
-		Statement s = null;
+	public JSONObject retrieveEventsByTag(Set<String> tags, String status) {
+		try (Statement s = c.createStatement()) {
+			StringBuilder query = new StringBuilder("SELECT eID, owner, posterUrl, name FROM events WHERE eID = ");
+			query.append("(SELECT eID FROM tags WHERE tag IN " + tags).append(")");
 
-		try {
-			s = c.createStatement();
-			StringBuilder query = new StringBuilder("SELECT eID, uID, poster, name tag FROM tags ");
+			if (!status.isEmpty()) {
+				query.append(" AND status = " + status);
+			}
 
+			query.append(";");
 			ResultSet rs = s.executeQuery(query.toString());
-			s.close();
 
 			return eventListJsonTransformer(rs);
 		} catch (SQLException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
+			throw new NullPointerException("Could not retrieve events by tags from the database: " + e.getMessage());
 		}
-		return null;
 	}
 
 	/**
@@ -475,23 +481,33 @@ public class DAL {
 	 *         that are owned by the passed user with a certain status. If no status
 	 *         is given, all the events from the user will be returned.
 	 * 
-	 *         Check that the owner exists in the table: EXISTS (SELECT 1 FROM users
-	 *         WHERE uID = userId) Run the query: SELECT eID, uID, poster, name FROM
-	 *         events WHERE uID = userId AND status = status Transform information
-	 *         into JSONObject and return
-	 * 
 	 *         Creating the JSON will be done through the eventListJsonTransformer
 	 *         method
 	 */
 	public JSONObject retrieveEventsByOwner(int userId, String status) {
+		try (Statement s = c.createStatement()) {
+			String check = "EXISTS (SELECT 1 FROM users WHERE uID = " + userId + ");";
 
-		try {
-			return eventListJsonTransformer(null);
+			// if check returns false then throw error
+			if (!s.execute(check)) {
+				throw new IllegalArgumentException("Cannot find the target user");
+			} else {
+				StringBuilder query = new StringBuilder(
+						"SELECT eID, owner, posterUrl, name FROM events WHERE owner = " + userId);
+
+				if (!status.isEmpty()) {
+					query.append(" AND status = " + status);
+				}
+
+				query.append(";");
+				ResultSet rs = s.executeQuery(query.toString());
+
+				return eventListJsonTransformer(rs);
+			}
 		} catch (SQLException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
+			throw new NullPointerException("Could not retrieve events by owner from the database: " + e.getMessage());
 		}
-		return null;
 	}
 
 	/**
@@ -504,22 +520,27 @@ public class DAL {
 	 *         no status is passed, all the events that fit the search pill be
 	 *         returned.
 	 * 
-	 *         Run the query: SELECT eID, uID, poster, name FROM events WHERE search
-	 *         ~ name AND status = status Transform information into JSONObject and
-	 *         return
-	 * 
 	 *         Creating the JSON will be done through the eventListJsonTransformer
 	 *         method
 	 */
 	public JSONObject retrieveEventsByName(String search, String status) {
 
-		try {
-			return eventListJsonTransformer(null);
+		try (Statement s = c.createStatement()) {
+			StringBuilder query = new StringBuilder(
+					"SELECT eID, owner, posterUrl, name FROM events WHERE name ILIKE %" + search + "%");
+
+			if (!status.isEmpty()) {
+				query.append(" AND status = " + status);
+			}
+
+			query.append(";");
+			ResultSet rs = s.executeQuery(query.toString());
+
+			return eventListJsonTransformer(rs);
 		} catch (SQLException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
+			throw new NullPointerException("Could not retrieve events by search from the database: " + e.getMessage());
 		}
-		return null;
 	}
 
 	/**
@@ -539,13 +560,16 @@ public class DAL {
 	 */
 	public JSONObject retrieveEventsByTime(Timestamp fromTime, Timestamp toTime) {
 
-		try {
-			return eventListJsonTransformer(null);
+		try (Statement s = c.createStatement()) {
+			String query = "SELECT eID, owner, posterUrl, name FROM events WHERE eventTime BETWEEN " + fromTime
+					+ " AND " + toTime + ";";
+			ResultSet rs = s.executeQuery(query);
+
+			return eventListJsonTransformer(rs);
 		} catch (SQLException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
+			throw new NullPointerException("Could not retrieve events by time from the database: " + e.getMessage());
 		}
-		return null;
 	}
 
 	/**
@@ -555,16 +579,29 @@ public class DAL {
 	 * 
 	 *         This method permits the subcsription of one user to another by adding
 	 *         a row to the subscriptions table.
-	 * 
-	 *         Check that the followed person exists: EXISTS (SELECT 1 FROM users
-	 *         WHERE uID = followedId) If not, error out. Check that the specific
-	 *         entry does not already exist, EXISTS (SELECT 1 FROM subscriptions
-	 *         WHERE followerID = followerId AND followedID = followedId) If it
-	 *         does, return an error. Otherwise, run the query INSERT INTO
-	 *         subscriptions (followerID, followedID) VALUES (followerId,
-	 *         followedId) Return a confirmation message
 	 */
 	public void subscribeTo(int followerId, int followedId) {
+		try (Statement s = c.createStatement()) {
+			String followedCheck = "EXISTS (SELECT 1 FROM users WHERE uID = " + followedId + ");";
+
+			if (!s.execute(followedCheck)) {
+				throw new IllegalArgumentException("User to be subscribed to does not exist");
+			}
+
+			String subscriptionCheck = "EXISTS (SELECT 1 FROM subscriptions WHERE followerID = " + followerId
+					+ " AND followedID = " + followedId + ");";
+
+			if (s.execute(subscriptionCheck)) {
+				throw new NullPointerException("Cannot subscribe to the same user twice");
+			}
+
+			String query = "INSERT INTO subscriptions (followerID, followedID) VALUES (" + followerId + ", "
+					+ followedId + ");";
+			s.executeUpdate(query);
+		} catch (SQLException e) {
+			e.printStackTrace();
+			throw new NullPointerException("Could not subscribe to user in database: " + e.getMessage());
+		}
 	}
 
 	/**
@@ -574,14 +611,23 @@ public class DAL {
 	 * 
 	 *         This method permits the un-subcsription of one user to another by
 	 *         deleting a row from the subscriptions table.
-	 * 
-	 *         Check that the specific entry exists, EXISTS (SELECT 1 FROM
-	 *         subscriptions WHERE followerID = followerId AND followedID =
-	 *         followedId) If it doesn't, throw an error. If it does run the query
-	 *         DELETE FROM subscriptions WHERE followerID= followerId AND followedID
-	 *         = followedId Return a confirmation message
 	 */
-	public void unsubscribeTo(int followerId, int followedId) {
+	public void unsubscribeFrom(int followerId, int followedId) {
+		try (Statement s = c.createStatement()) {
+			String subscriptionCheck = "EXISTS (SELECT 1 FROM subscriptions WHERE followerID = " + followerId
+					+ " AND followedID = " + followedId + ");";
+
+			if (!s.execute(subscriptionCheck)) {
+				throw new NullPointerException("Cannot unsubscribe from unknown relationship");
+			}
+
+			String query = "DELETE FROM subscriptions WHERE followerID = " + followerId + "AND followedID " + followedId
+					+ ";";
+			s.executeUpdate(query);
+		} catch (SQLException e) {
+			e.printStackTrace();
+			throw new NullPointerException("Could not subscribe to user in database: " + e.getMessage());
+		}
 	}
 
 	/**
@@ -591,22 +637,19 @@ public class DAL {
 	 *         This method retrieves some basic information from all the users the
 	 *         current user is subscribed to.
 	 * 
-	 *         Run the query SELECT uID, firstName, lastName FROM users WHERE uID =
-	 *         (SELECT followedID FROM subscriptions WHERE followerID= userId)
-	 *         Transform information into JSONObject and return.
-	 * 
 	 *         Creating the JSON will be done through the userListJsonTransformer
 	 *         method
 	 */
 	public JSONObject retrieveSubscriptions(int userId) {
+		try (Statement s = c.createStatement()) {
+			StringBuilder query = new StringBuilder("SELECT uID, firstName, lastName FROM users WHERE uID = ");
+			query.append("(SELECT followedID FROM subscriptions WHERE followerID = ").append(userId).append(");");
 
-		try {
-			return userListJsonTransformer(null);
+			return userListJsonTransformer(s.executeQuery(query.toString()));
 		} catch (SQLException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
+			throw new NullPointerException("Could not retrieve subscriptions from user in database: " + e.getMessage());
 		}
-		return null;
 	}
 
 	/**
@@ -616,22 +659,19 @@ public class DAL {
 	 *         This method retrieves some basic information from all the users that
 	 *         are subscribed to the current user.
 	 * 
-	 *         Run the query SELECT uID, firstName, lastName FROM users WHERE uID =
-	 *         (SELECT followerID FROM subscriptions WHERE followedID = userId)
-	 *         Transform information into JSONObject and return
-	 * 
 	 *         Creating the JSON will be done through the userListJsonTransformer
 	 *         method
 	 */
 	public JSONObject retrieveSubscribers(int userId) {
+		try (Statement s = c.createStatement()) {
+			StringBuilder query = new StringBuilder("SELECT uID, firstName, lastName FROM users WHERE uID = ");
+			query.append("(SELECT followerID FROM subscriptions WHERE followedID = ").append(userId).append(");");
 
-		try {
-			return userListJsonTransformer(null);
+			return userListJsonTransformer(s.executeQuery(query.toString()));
 		} catch (SQLException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
+			throw new NullPointerException("Could not retrieve subscriptions from user in database: " + e.getMessage());
 		}
-		return null;
 	}
 
 	/**
