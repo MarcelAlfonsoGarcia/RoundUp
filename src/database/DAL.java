@@ -683,14 +683,27 @@ public class DAL {
 	 * 
 	 *         This method permits RSVP to one event by adding a row to the rsvps
 	 *         table.
-	 * 
-	 *         Check that the email is not empty, if so error out. Check that the
-	 *         email isn't already rsvpd to that event, EXISTS (SELECT 1 FROM rsvps
-	 *         WHERE email = email AND eID = eventID) If it does, return an error.
-	 *         Otherwise, run the query INSERT INTO rsvps (email, name, eID, time)
-	 *         VALUES (email, name, eventId, time) Return a confirmation message
 	 */
 	public void rsvpTo(String email, String name, int eventId, Timestamp time) {
+		if (email == null || email.isEmpty()) {
+			throw new IllegalArgumentException("Email cannot be left empty");
+		}
+
+		try (Statement s = c.createStatement()) {
+			String check = "EXISTS (SELECT 1 FROM rsvps WHERE email = " + email + " AND eID = " + eventId + ");";
+
+			if (s.execute(check)) {
+				throw new IllegalArgumentException("Cannot RSVP to the same event twice");
+			} else {
+				String query = "INSERT INTO rsvps (email, name, eID, time) VALUES (" + email + ", " + name + ", "
+						+ eventId + ", " + time + ");";
+
+				s.executeUpdate(query);
+			}
+		} catch (SQLException e) {
+			e.printStackTrace();
+			throw new NullPointerException("Could not rsvp to event: " + e.getMessage());
+		}
 	}
 
 	/**
@@ -700,14 +713,25 @@ public class DAL {
 	 * 
 	 *         This method permits un-RSVP to one event by removing a row to the
 	 *         rsvps table.
-	 * 
-	 *         Check that the email is not empty, if so error out. Check that the
-	 *         email is already rsvpd to that event, EXISTS (SELECT 1 FROM rsvps
-	 *         WHERE email = email AND eID = eventID) If it isn't, return an error.
-	 *         Otherwise, run the query DELETE FROM rsvps WHERE email = email AND
-	 *         eID= eventId Return a confirmation message
 	 */
 	public void unRsvpFrom(String email, int eventId) {
+		if (email == null || email.isEmpty()) {
+			throw new IllegalArgumentException("Email cannot be left empty");
+		}
+
+		try (Statement s = c.createStatement()) {
+			String check = "EXISTS (SELECT 1 FROM rsvps WHERE email = " + email + " AND eID = " + eventId + ");";
+
+			if (!s.execute(check)) {
+				throw new IllegalArgumentException("User has not RSVPd to this event");
+			} else {
+				String query = "DELETE FROM rsvps WHERE email = " + email + " AND eID = " + eventId;
+				s.executeUpdate(query);
+			}
+		} catch (SQLException e) {
+			e.printStackTrace();
+			throw new NullPointerException("Could not rsvp to event: " + e.getMessage());
+		}
 	}
 
 	/**
@@ -718,23 +742,27 @@ public class DAL {
 	 *         This method retireves all the events RSVPd to by a user depending on
 	 *         the passed status. If the status is not passed then all RSVPs (past
 	 *         and present) will be returned.
-	 * 
-	 *         Run the query SELECT eID, uID, name, poster FROM events WHERE eID =
-	 *         (SELECT eID FROM rsvps WHERE uID = userId) AND status = status
-	 *         Transform information into JSONObject and return
-	 * 
+	 *
 	 *         Creating the JSON will be done through the eventListJsonTransformer
 	 *         method
 	 */
 	public JSONObject retrieveRsvpdEvents(String email, String status) {
 
-		try {
-			return eventListJsonTransformer(null);
+		try (Statement s = c.createStatement()) {
+			StringBuilder query = new StringBuilder("SELECT eID, owner, posterUrl, name FROM events WHERE eID = ");
+			query.append("(SELECT eID FROM rsvps WHERE email = " + email + ")");
+			if (!status.isEmpty()) {
+				query.append(" AND status = " + status);
+			}
+
+			query.append(";");
+			ResultSet rs = s.executeQuery(query.toString());
+
+			return eventListJsonTransformer(rs);
 		} catch (SQLException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
+			throw new NullPointerException("Could not retrieve RSVPd events: " + e.getMessage());
 		}
-		return null;
 	}
 
 	/**
@@ -751,14 +779,16 @@ public class DAL {
 	 *         method
 	 */
 	public JSONObject retrieveAttendees(int eventId) {
+		try (Statement s = c.createStatement()) {
+			StringBuilder query = new StringBuilder("SELECT uID, firstName, lastName FROM users WHERE email = ");
+			query.append("(SELECT email FROM rsvps WHERE eID = " + eventId + ");");
+			ResultSet rs = s.executeQuery(query.toString());
 
-		try {
-			return userListJsonTransformer(null);
+			return userListJsonTransformer(rs);
 		} catch (SQLException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
+			throw new NullPointerException("Could not retrieve RSVPd events: " + e.getMessage());
 		}
-		return null;
 	}
 
 	/**
@@ -808,7 +838,14 @@ public class DAL {
 		event.put("popularity", eventRs.getInt("popularity"));
 		event.put("status", eventRs.getString("status"));
 
+		JSONArray tags = new JSONArray();
+		while (tagsRs.next()) {
+			tags.add(tagsRs.getString("tag"));
+		}
+		event.put("tags", tags);
+		
 		eventRs.close();
+		tagsRs.close();
 		return event;
 	}
 

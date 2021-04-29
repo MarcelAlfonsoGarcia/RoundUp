@@ -41,7 +41,7 @@ public class TestDAL {
 	private static final String EVENT_ONE_LOCATION = "Estella";
 	private static final int EVENT_ONE_POPULARITY = 23;
 	private static final String EVENT_ONE_STATUS = "active";
-	private static final Set<String> EVENT_ONE_TAGS = new HashSet<String>(Arrays.asList("Math", "Colloquium"));
+	private static final Set<String> EVENT_ONE_TAGS = new HashSet<String>(Arrays.asList("Mathematics", "Colloquium"));
 
 	private static int eventTwoId = 2;
 	private static final int EVENT_TWO_OWNER = 2;
@@ -58,7 +58,7 @@ public class TestDAL {
 	private static JSONObject userOne;
 	private static JSONObject userTwo;
 
-	private static JSONObject updatedEvent;
+	private static JSONObject eventOne;
 	private static JSONObject eventTwo;
 
 	private static DAL dal;
@@ -80,17 +80,23 @@ public class TestDAL {
 		userTwo.put("email", USR_TWO_EMAIL);
 		userTwo.put("campus", USR_TWO_CAMPUS);
 
-		updatedEvent = new JSONObject();
-		updatedEvent.put("eID", eventOneId);
-		updatedEvent.put("owner", EVENT_ONE_OWNER);
-		updatedEvent.put("eventTime", EVENT_ONE_TIME);
-		updatedEvent.put("posterUrl", EVENT_ONE_POSTER_URL);
-		updatedEvent.put("name", EVENT_ONE_NAME);
-		updatedEvent.put("description", EVENT_ONE_DESCRIPTION);
-		updatedEvent.put("location", EVENT_ONE_LOCATION);
-		updatedEvent.put("popularity", EVENT_ONE_POPULARITY);
-		updatedEvent.put("status", EVENT_ONE_STATUS);
+		eventOne = new JSONObject();
+		eventOne.put("eID", eventOneId);
+		eventOne.put("owner", EVENT_ONE_OWNER);
+		eventOne.put("eventTime", EVENT_ONE_TIME);
+		eventOne.put("posterUrl", EVENT_ONE_POSTER_URL);
+		eventOne.put("name", EVENT_ONE_NAME);
+		eventOne.put("description", EVENT_ONE_DESCRIPTION);
+		eventOne.put("location", EVENT_ONE_LOCATION);
+		eventOne.put("popularity", EVENT_ONE_POPULARITY);
+		eventOne.put("status", EVENT_ONE_STATUS);
 
+		JSONArray eventOneTags = new JSONArray();
+		for (String tag : EVENT_ONE_TAGS) {
+			eventOneTags.add(tag);
+		}
+		eventOne.put("tags", eventOneTags);
+		
 		eventTwo = new JSONObject();
 		eventTwo.put("eID", eventTwoId);
 		eventTwo.put("owner", EVENT_TWO_OWNER);
@@ -102,6 +108,12 @@ public class TestDAL {
 		eventTwo.put("popularity", EVENT_TWO_POPULARITY);
 		eventTwo.put("status", EVENT_TWO_STATUS);
 
+		JSONArray eventTwoTags = new JSONArray();
+		for (String tag : EVENT_TWO_TAGS) {
+			eventTwoTags.add(tag);
+		}
+		eventTwo.put("tags", eventTwoTags);
+		
 		dal = DAL.getInstance();
 	}
 
@@ -226,9 +238,9 @@ public class TestDAL {
 
 	@Test
 	public void createValidEvent() {
-		assertEquals(updatedEvent, dal.createEvent(EVENT_ONE_OWNER, EVENT_ONE_TIME, EVENT_ONE_POSTER_URL,
+		assertEquals(eventOne, dal.createEvent(EVENT_ONE_OWNER, EVENT_ONE_TIME, EVENT_ONE_POSTER_URL,
 				EVENT_ONE_NAME, EVENT_ONE_DESCRIPTION, EVENT_ONE_LOCATION, EVENT_ONE_TAGS));
-		assertEquals(updatedEvent, dal.createEvent(EVENT_TWO_OWNER, EVENT_TWO_TIME, EVENT_TWO_POSTER_URL,
+		assertEquals(eventOne, dal.createEvent(EVENT_TWO_OWNER, EVENT_TWO_TIME, EVENT_TWO_POSTER_URL,
 				EVENT_TWO_NAME, EVENT_TWO_DESCRIPTION, EVENT_TWO_LOCATION, EVENT_TWO_TAGS));
 	}
 
@@ -264,7 +276,7 @@ public class TestDAL {
 
 	@Test
 	public void retrieveExistingEvent() {
-		assertEquals(updatedEvent, dal.retrieveEvent(eventOneId));
+		assertEquals(eventOne, dal.retrieveEvent(eventOneId));
 	}
 
 	@Test
@@ -294,7 +306,7 @@ public class TestDAL {
 	@SuppressWarnings("unchecked")
 	@Test
 	public void updateEvent() {
-		updatedEvent = new JSONObject();
+		JSONObject updatedEvent = new JSONObject();
 		updatedEvent.put("eID", eventOneId);
 		updatedEvent.put("owner", EVENT_ONE_OWNER);
 		updatedEvent.put("eventTime", Timestamp.valueOf("2022-04-05 14:55:15.888"));
