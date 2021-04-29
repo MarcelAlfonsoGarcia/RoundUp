@@ -15,8 +15,6 @@ import java.sql.Statement;
 import java.sql.Timestamp;
 import java.util.List;
 import java.util.Set;
-import java.util.stream.Collectors;
-
 import org.json.simple.JSONObject;
 import org.json.simple.JSONArray;
 
@@ -85,7 +83,7 @@ public class DAL {
 			String check = "EXISTS (SELECT 1 FROM users WHERE email = " + email + ");";
 
 			// if check returns true then throw error
-			if (check.isEmpty()) {
+			if (s.execute(check)) {
 				throw new IllegalArgumentException("The email provided is already in use");
 			} else {
 				StringBuilder query = new StringBuilder(
@@ -119,7 +117,7 @@ public class DAL {
 			String check = "EXISTS (SELECT 1 FROM users WHERE uID = " + userId + ");";
 
 			// if check returns false then throw error
-			if (!check.isEmpty()) {
+			if (!s.execute(check)) {
 				throw new IllegalArgumentException("No user exists under the provided information");
 			} else {
 				ResultSet userResult = s.executeQuery("SELECT * FROM users WHERE uID = " + userId);
@@ -143,7 +141,7 @@ public class DAL {
 			String check = "EXISTS (SELECT 1 FROM users WHERE uID = " + userId + ");";
 
 			// if check returns false then throw error
-			if (!check.isEmpty()) {
+			if (!s.execute(check)) {
 				throw new IllegalArgumentException("No user exists under the provided information");
 			} else {
 				s.executeUpdate("DELETE FROM users WHERE uID = " + userId);
@@ -184,7 +182,7 @@ public class DAL {
 			String check = "EXISTS (SELECT 1 FROM users WHERE uID = " + userId + ");";
 
 			// if check returns false then throw error
-			if (!check.isEmpty()) {
+			if (!s.execute(check)) {
 				throw new IllegalArgumentException("No user exists under the provided information");
 			} else {
 				StringBuilder query = new StringBuilder("UPDATE users SET ");
@@ -226,7 +224,7 @@ public class DAL {
 		} else if (posterUrl == null || posterUrl.isEmpty()) {
 			throw new IllegalArgumentException("Poster must be uploaded");
 		} else if (name == null || name.isEmpty()) {
-			throw new IllegalArgumentException("Poster Name cannot be left empty");
+			throw new IllegalArgumentException("Event Name cannot be left empty");
 		}
 
 		try (Statement s = c.createStatement()) {
@@ -234,7 +232,7 @@ public class DAL {
 			String check = "EXISTS (SELECT 1 FROM events WHERE uID = " + userId + " AND name = " + name + ");";
 
 			// if check returns true then throw error
-			if (check.isEmpty()) {
+			if (s.execute(check)) {
 				throw new IllegalArgumentException("Cannot create duplicate event");
 			} else {
 				StringBuilder query = new StringBuilder(
@@ -253,7 +251,9 @@ public class DAL {
 				}
 				s.executeBatch();
 
-				return eventJsonTransformer(rs);
+				String tagsQuery = "SELECT DISTINCT tag FROM tags WHERE event = " + eventId + ";";
+
+				return eventJsonTransformer(rs, s.executeQuery(tagsQuery));
 			}
 		} catch (SQLException e) {
 			e.printStackTrace();
@@ -268,29 +268,28 @@ public class DAL {
 	 *         This method will obtain all the event information stored in the
 	 *         events table of the database.
 	 * 
-	 *         Run a query to retrieve the event from the database SELECT eID,
-	 *         description, eventTime, posterUrl, name, location, tag FROM events
-	 *         INNER JOIN tags ON events.eID = tags.eID WHERE events.eID = eventId
-	 *         Transform information into JSONObject and return, if the query is
-	 *         empty simply return an error message
-	 * 
 	 *         Query results will be transformed into JSON with the
 	 *         eventJsonTransformer method
 	 */
 	public JSONObject retrieveEvent(int eventId) {
-		Statement s = null;
+		try (Statement s = c.createStatement()) {
+			String check = "EXISTS (SELECT 1 FROM events WHERE eID = " + eventId + ");";
 
-		try {
-			s = c.createStatement();
-			ResultSet rs = s.executeQuery("SELECT * FROM events WHERE eID = " + eventId + ";");
-			s.close();
+			// if check returns false then throw error
+			if (!s.execute(check)) {
+				throw new IllegalArgumentException("No event exists under the provided information");
+			} else {
+				String eventQuery = "SELECT * FROM events WHERE eID = " + eventId + ";";
+				String tagsQuery = "SELECT DISTINCT tag FROM tags WHERE event = " + eventId + ";";
 
-			return eventJsonTransformer(rs);
+				ResultSet eventRs = s.executeQuery(eventQuery);
+				ResultSet tagsRs = s.executeQuery(tagsQuery);
+				return eventJsonTransformer(eventRs, tagsRs);
+			}
 		} catch (SQLException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
+			throw new IllegalArgumentException("Could not load event from the database: " + e.getMessage());
 		}
-		return null;
 	}
 
 	/**
@@ -307,15 +306,19 @@ public class DAL {
 	 *         the database DELETE FROM events WHERE eID = eventId AND uID = userId
 	 */
 	public void deleteEvent(int eventId, int userId) {
-		Statement s = null;
+		try (Statement s = c.createStatement()) {
+			String check = "EXISTS (SELECT 1 FROM events WHERE eID = " + eventId + " AND owner = " + userId + ");";
 
-		try {
-			s = c.createStatement();
-			s.executeUpdate("DELETE FROM events WHERE eID = " + eventId + " AND owner = " + userId);
-			s.close();
+			// if check returns false then throw error
+			if (!s.execute(check)) {
+				throw new IllegalArgumentException("No event exists under the provided information");
+			} else {
+				s.executeUpdate("DELETE FROM events WHERE eID = " + eventId + " AND owner = " + userId);
+				s.executeUpdate("DELETE FROM tags WHERE event = " + eventId);
+			}
 		} catch (SQLException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
+			throw new IllegalArgumentException("Could not delete event from the database: " + e.getMessage());
 		}
 	}
 
@@ -331,30 +334,50 @@ public class DAL {
 	 *         This method will update all the fields in the database for a specific
 	 *         event given that the owner is the one that prompted the update.
 	 * 
-	 *         Check that the posterUrl, name, and eventTime are not empty, if so
-	 *         return error Check that the tags are not repeating, if so return an
-	 *         error Check that the event exists in the database EXISTS (SELECT 1
-	 *         FROM events WHERE uID = userId AND name = name) If false, throw an
-	 *         error message If true, run the query: UPDATE events SET description =
-	 *         description, eventTime = eventTime, .... WHERE eID = eventId AND uID
-	 *         = userId Transform information into JSONObject and return
-	 * 
-	 *         To return the event, we will have to run a SELECT query with the
-	 *         specific event info
-	 * 
 	 *         Query results will be transformed into JSON with the
 	 *         eventJsonTransformer method
 	 */
 	public JSONObject updateEvent(int eventId, int userId, String description, Timestamp eventTime, String name,
-			String location, List<String> tags) {
+			String location, Set<String> tags) {
 
-		try {
-			return eventJsonTransformer(null);
-		} catch (SQLException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+		if (eventTime == null) {
+			throw new IllegalArgumentException("Event Time cannot be left empty");
+		} else if (name == null || name.isEmpty()) {
+			throw new IllegalArgumentException("Event Name cannot be left empty");
 		}
-		return null;
+
+		try (Statement s = c.createStatement()) {
+
+			String check = "EXISTS (SELECT 1 FROM events WHERE eID = " + eventId + ");";
+
+			// if check returns false then throw error
+			if (!s.execute(check)) {
+				throw new IllegalArgumentException("Cannot find target event");
+			} else {
+				StringBuilder query = new StringBuilder("UPDATE users SET ");
+				query.append(eventTime).append(", ").append(name).append(", ")
+						.append(description).append(", ").append(location);
+				query.append("WHERE eID =" + userId).append(" AND owner = " + userId);
+				query.append(" RETURNING *;");
+
+				// we cannot update the rows in the table, simply remove them and re-add them
+				s.executeUpdate("DELETE FROM tags WHERE event = " + eventId);
+
+				String tagInsert = "";
+				for (String tag : tags) {
+					tagInsert = "INSERT INTO tags (event, tag) VALUES (" + eventId + ", " + tag + ");";
+					s.addBatch(tagInsert);
+				}
+				s.executeBatch();
+
+				String tagsQuery = "SELECT DISTINCT tag FROM tags WHERE event = " + eventId + ";";
+
+				return eventJsonTransformer(s.executeQuery(query.toString()), s.executeQuery(tagsQuery));
+			}
+		} catch (SQLException e) {
+			e.printStackTrace();
+			throw new IllegalArgumentException("Could not update event in the database: " + e.getMessage());
+		}
 	}
 
 	/**
@@ -378,9 +401,6 @@ public class DAL {
 	 * @return tags: A JSON object with all the tags retrieved
 	 * 
 	 *         This method will obtain all the tags related to a specific event
-	 * 
-	 *         Run a query to retrieve the tags from the database SELECT DISTINCT
-	 *         tag FROM tags Transform information into JSONObject and return
 	 * 
 	 *         JSON will have the form of { "tags" : ["tag1", "tag2"]}
 	 */
@@ -736,19 +756,19 @@ public class DAL {
 	 *         "things happen", ... }
 	 */
 	@SuppressWarnings("unchecked")
-	private JSONObject eventJsonTransformer(ResultSet rs) throws SQLException {
+	private JSONObject eventJsonTransformer(ResultSet eventRs, ResultSet tagsRs) throws SQLException {
 		JSONObject event = new JSONObject();
-		event.put("eID", rs.getInt("eID"));
-		event.put("owner", rs.getInt("owner"));
-		event.put("eventTime", rs.getTimestamp("eventTime"));
-		event.put("posterUrl", rs.getString("posterUrl"));
-		event.put("name", rs.getString("name"));
-		event.put("description", rs.getString("description"));
-		event.put("location", rs.getString("location"));
-		event.put("popularity", rs.getInt("popularity"));
-		event.put("status", rs.getString("status"));
+		event.put("eID", eventRs.getInt("eID"));
+		event.put("owner", eventRs.getInt("owner"));
+		event.put("eventTime", eventRs.getTimestamp("eventTime"));
+		event.put("posterUrl", eventRs.getString("posterUrl"));
+		event.put("name", eventRs.getString("name"));
+		event.put("description", eventRs.getString("description"));
+		event.put("location", eventRs.getString("location"));
+		event.put("popularity", eventRs.getInt("popularity"));
+		event.put("status", eventRs.getString("status"));
 
-		rs.close();
+		eventRs.close();
 		return event;
 	}
 
