@@ -1,6 +1,6 @@
 package test;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 import java.sql.Timestamp;
@@ -154,8 +154,10 @@ public class TestDAL {
 	@Test
 	// @Order(1)
 	public void createValidUser() {
-		assertEquals(userOne, dal.createUser(USER_ONE_FIRST_NAME, USER_ONE_LAST_NAME, USER_ONE_EMAIL, USER_ONE_PASSWORD, USER_ONE_CAMPUS));
-		assertEquals(userTwo, dal.createUser(USER_TWO_FIRST_NAME, USER_TWO_LAST_NAME, USER_TWO_EMAIL, USER_TWO_PASSWORD, USER_TWO_CAMPUS));
+		assertTrue(compareUsers(userOne, dal.createUser(USER_ONE_FIRST_NAME, USER_ONE_LAST_NAME, USER_ONE_EMAIL, USER_ONE_PASSWORD,
+				USER_ONE_CAMPUS)));
+		assertTrue(compareUsers(userTwo, dal.createUser(USER_TWO_FIRST_NAME, USER_TWO_LAST_NAME, USER_TWO_EMAIL, USER_TWO_PASSWORD,
+				USER_TWO_CAMPUS)));
 	}
 
 	@Test
@@ -175,7 +177,7 @@ public class TestDAL {
 		exceptionRule.expectMessage("Email cannot be left empty");
 
 		dal.createUser(USER_ONE_FIRST_NAME, USER_ONE_LAST_NAME, "", USER_ONE_PASSWORD, USER_ONE_CAMPUS);
-		
+
 		exceptionRule.expect(IllegalArgumentException.class);
 		exceptionRule.expectMessage("Password cannot be left empty");
 
@@ -192,26 +194,26 @@ public class TestDAL {
 
 	@Test
 	public void logInExistingUser() {
-		assertEquals(userOne, dal.logInUser(USER_ONE_EMAIL, USER_ONE_PASSWORD));
-		assertEquals(userTwo, dal.logInUser(USER_TWO_EMAIL, USER_TWO_PASSWORD));
+		assertTrue(compareUsers(userOne, dal.logInUser(USER_ONE_EMAIL, USER_ONE_PASSWORD)));
+		assertTrue(compareUsers(userTwo, dal.logInUser(USER_TWO_EMAIL, USER_TWO_PASSWORD)));
 	}
-	
+
 	@Test
 	public void logInBadFields() {
 		exceptionRule.expect(IllegalArgumentException.class);
 		exceptionRule.expectMessage("Email or Password is incorrect");
 
 		dal.logInUser("jonlol", USER_TWO_PASSWORD);
-		
+
 		exceptionRule.expect(IllegalArgumentException.class);
 		exceptionRule.expectMessage("Email or Password is incorrect");
 
 		dal.logInUser(USER_ONE_EMAIL, "password1");
 	}
-	
+
 	@Test
 	public void retrieveExistingUser() {
-		assertEquals(userOne, dal.retrieveUser(userOneId));
+		assertTrue(compareUsers(userOne, dal.retrieveUser(userOneId)));
 	}
 
 	@Test
@@ -247,7 +249,7 @@ public class TestDAL {
 		updatedUser.put("email", "jack.savage@email.com");
 		updatedUser.put("campus", "CMC");
 
-		assertEquals(updatedUser, dal.updateUser(userOneId, "Jack", "Savage", "jack.savage@email.com", "CMC"));
+		assertTrue(compareUsers(updatedUser, dal.updateUser(userOneId, "Jack", "Savage", "jack.savage@email.com", "CMC")));
 		dal.updateUser(userOneId, USER_ONE_FIRST_NAME, USER_ONE_LAST_NAME, USER_ONE_EMAIL, USER_ONE_CAMPUS);
 	}
 
@@ -290,10 +292,10 @@ public class TestDAL {
 
 	@Test
 	public void createValidEvent() {
-		assertEquals(eventOne, dal.createEvent(EVENT_ONE_OWNER, EVENT_ONE_TIME, EVENT_ONE_POSTER_URL, EVENT_ONE_NAME,
-				EVENT_ONE_DESCRIPTION, EVENT_ONE_LOCATION, EVENT_ONE_TAGS));
-		assertEquals(eventOne, dal.createEvent(EVENT_TWO_OWNER, EVENT_TWO_TIME, EVENT_TWO_POSTER_URL, EVENT_TWO_NAME,
-				EVENT_TWO_DESCRIPTION, EVENT_TWO_LOCATION, EVENT_TWO_TAGS));
+		assertTrue(compareEvents(eventOne, dal.createEvent(EVENT_ONE_OWNER, EVENT_ONE_TIME, EVENT_ONE_POSTER_URL, EVENT_ONE_NAME,
+				EVENT_ONE_DESCRIPTION, EVENT_ONE_LOCATION, EVENT_ONE_TAGS)));
+		assertTrue(compareEvents(eventOne, dal.createEvent(EVENT_TWO_OWNER, EVENT_TWO_TIME, EVENT_TWO_POSTER_URL, EVENT_TWO_NAME,
+				EVENT_TWO_DESCRIPTION, EVENT_TWO_LOCATION, EVENT_TWO_TAGS)));
 	}
 
 	@Test
@@ -328,7 +330,7 @@ public class TestDAL {
 
 	@Test
 	public void retrieveExistingEvent() {
-		assertEquals(eventOne, dal.retrieveEvent(eventOneId));
+		assertTrue(compareEvents(eventOne, dal.retrieveEvent(eventOneId)));
 	}
 
 	@Test
@@ -358,6 +360,7 @@ public class TestDAL {
 	@SuppressWarnings("unchecked")
 	@Test
 	public void updateEvent() {
+		// TODO: tags
 		JSONObject updatedEvent = new JSONObject();
 		updatedEvent.put("eID", eventOneId);
 		updatedEvent.put("owner", EVENT_ONE_OWNER);
@@ -369,8 +372,8 @@ public class TestDAL {
 		updatedEvent.put("popularity", EVENT_ONE_POPULARITY);
 		updatedEvent.put("status", EVENT_ONE_STATUS);
 
-		assertEquals(updatedEvent, dal.updateEvent(eventOneId, EVENT_ONE_OWNER, "New Description",
-				Timestamp.valueOf("2022-04-05 14:55:15.888"), "New Name", "New Location", null));
+		assertTrue(compareEvents(updatedEvent, dal.updateEvent(eventOneId, EVENT_ONE_OWNER, "New Description",
+				Timestamp.valueOf("2022-04-05 14:55:15.888"), "New Name", "New Location", null)));
 
 		dal.updateEvent(eventOneId, EVENT_ONE_OWNER, EVENT_ONE_DESCRIPTION, EVENT_ONE_TIME, EVENT_ONE_NAME,
 				EVENT_ONE_LOCATION, EVENT_ONE_TAGS);
@@ -402,111 +405,116 @@ public class TestDAL {
 
 	@Test
 	public void testUpdateEventStatus() {
-		fail("Not yet implemented");
+		dal.updateEventStatus("inactive", Timestamp.valueOf("2022-04-03 14:55:10.888"),
+				Timestamp.valueOf("2022-04-05 14:55:10.888"));
 	}
 
 	@SuppressWarnings("unchecked")
 	@Test
 	public void testRetrieveAllTags() {
-		JSONObject tags = new JSONObject();
-		JSONArray tagList = new JSONArray();
+		Set<String> tagSet = new HashSet<String>();
+		tagSet.add("Pomona");
+		tagSet.add("CMC");
+		tagSet.add("HMC");
+		tagSet.add("Scripps");
+		tagSet.add("Pitzer");
+		tagSet.add("Africana Studies");
+		tagSet.add("American Studies");
+		tagSet.add("Anthropology");
+		tagSet.add("Art");
+		tagSet.add("Art History");
+		tagSet.add("Asian American Studies");
+		tagSet.add("Asian Languages & Literatures");
+		tagSet.add("Asian Studies");
+		tagSet.add("Biology");
+		tagSet.add("Chemistry");
+		tagSet.add("Chicana/o-Latina/o Studies");
+		tagSet.add("Chinese");
+		tagSet.add("Classics");
+		tagSet.add("Computer Science");
+		tagSet.add("Economics");
+		tagSet.add("English");
+		tagSet.add("Environmental Analysis");
+		tagSet.add("French");
+		tagSet.add("Gender & Women Studies");
+		tagSet.add("Geology");
+		tagSet.add("German Studies");
+		tagSet.add("History");
+		tagSet.add("International Relations");
+		tagSet.add("Japanese");
+		tagSet.add("Late Antique-Medieval Studies");
+		tagSet.add("Latin American Studies");
+		tagSet.add("Linguistics & Cognitive Science");
+		tagSet.add("Mathematics");
+		tagSet.add("Media Studies");
+		tagSet.add("Middle Eastern Studies");
+		tagSet.add("Molecular Biology");
+		tagSet.add("Music");
+		tagSet.add("Neuroscience");
+		tagSet.add("Philosophy");
+		tagSet.add("Philosophy, Politics & Economics");
+		tagSet.add("Physical Education");
+		tagSet.add("Physics & Astronomy");
+		tagSet.add("Politics");
+		tagSet.add("Psychological Science");
+		tagSet.add("Public Policy Analysis");
+		tagSet.add("Religious Studies");
+		tagSet.add("Romance Languages & Literatures");
+		tagSet.add("Russian");
+		tagSet.add("Russian & Eastern European Studies");
+		tagSet.add("Science, Technology, & Society");
+		tagSet.add("Sociology");
+		tagSet.add("Spanish");
+		tagSet.add("Theatre");
+		tagSet.add("Dance");
+		tagSet.add("Colloquium");
+		tagSet.add("Commencement");
+		tagSet.add("Campus-Wide");
+		tagSet.add("Mandatory");
+		tagSet.add("Important");
+		tagSet.add("Festival");
+		tagSet.add("Concert");
+		tagSet.add("Play");
+		tagSet.add("Relaxation");
+		tagSet.add("Lunch");
+		tagSet.add("Breakfast");
+		tagSet.add("Dinner");
+		tagSet.add("Brunch");
+		tagSet.add("Snack");
+		tagSet.add("Seniors");
+		tagSet.add("Juniors");
+		tagSet.add("Freshmen");
+		tagSet.add("Sophomores");
+		tagSet.add("Outdoors");
+		tagSet.add("Indoors");
+		tagSet.add("OA");
+		tagSet.add("On-Campus");
+		tagSet.add("Off-Campus");
+		tagSet.add("Online");
+		tagSet.add("Talk");
+		tagSet.add("Party");
+		tagSet.add("Guest Speaker/s");
 
-		tagList.add("Pomona");
-		tagList.add("CMC");
-		tagList.add("HMC");
-		tagList.add("Scripps");
-		tagList.add("Pitzer");
-		tagList.add("Africana Studies");
-		tagList.add("American Studies");
-		tagList.add("Anthropology");
-		tagList.add("Art");
-		tagList.add("Art History");
-		tagList.add("Asian American Studies");
-		tagList.add("Asian Languages & Literatures");
-		tagList.add("Asian Studies");
-		tagList.add("Biology");
-		tagList.add("Chemistry");
-		tagList.add("Chicana/o-Latina/o Studies");
-		tagList.add("Chinese");
-		tagList.add("Classics");
-		tagList.add("Computer Science");
-		tagList.add("Economics");
-		tagList.add("English");
-		tagList.add("Environmental Analysis");
-		tagList.add("French");
-		tagList.add("Gender & Women Studies");
-		tagList.add("Geology");
-		tagList.add("German Studies");
-		tagList.add("History");
-		tagList.add("International Relations");
-		tagList.add("Japanese");
-		tagList.add("Late Antique-Medieval Studies");
-		tagList.add("Latin American Studies");
-		tagList.add("Linguistics & Cognitive Science");
-		tagList.add("Mathematics");
-		tagList.add("Media Studies");
-		tagList.add("Middle Eastern Studies");
-		tagList.add("Molecular Biology");
-		tagList.add("Music");
-		tagList.add("Neuroscience");
-		tagList.add("Philosophy");
-		tagList.add("Philosophy, Politics & Economics");
-		tagList.add("Physical Education");
-		tagList.add("Physics & Astronomy");
-		tagList.add("Politics");
-		tagList.add("Psychological Science");
-		tagList.add("Public Policy Analysis");
-		tagList.add("Religious Studies");
-		tagList.add("Romance Languages & Literatures");
-		tagList.add("Russian");
-		tagList.add("Russian & Eastern European Studies");
-		tagList.add("Science, Technology, & Society");
-		tagList.add("Sociology");
-		tagList.add("Spanish");
-		tagList.add("Theatre");
-		tagList.add("Dance");
-		tagList.add("Colloquium");
-		tagList.add("Commencement");
-		tagList.add("Campus-Wide");
-		tagList.add("Mandatory");
-		tagList.add("Important");
-		tagList.add("Festival");
-		tagList.add("Concert");
-		tagList.add("Play");
-		tagList.add("Relaxation");
-		tagList.add("Lunch");
-		tagList.add("Breakfast");
-		tagList.add("Dinner");
-		tagList.add("Brunch");
-		tagList.add("Snack");
-		tagList.add("Seniors");
-		tagList.add("Juniors");
-		tagList.add("Freshmen");
-		tagList.add("Sophomores");
-		tagList.add("Outdoors");
-		tagList.add("Indoors");
-		tagList.add("OA");
-		tagList.add("On-Campus");
-		tagList.add("Off-Campus");
-		tagList.add("Online");
-		tagList.add("Talk");
-		tagList.add("Party");
-		tagList.add("Guest Speaker/s");
-		tags.put("tags", tagList);
-
-		assertEquals(tags, dal.retrieveAllTags());
+		JSONObject tagsJson = dal.retrieveAllTags();
+		JSONArray tagsArray = (JSONArray) tagsJson.get("tags");
+		
+		boolean fullyContained = true;
+		for (int i = 0; i < tagsArray.size(); i++) {
+			fullyContained = fullyContained && tagSet.contains((String) tagsArray.get(i));
+		}
+		assertTrue(fullyContained);
 	}
 
 	@Test
 	public void retrieveEventsByKnownTags() {
 		Set<String> mathTags = new HashSet<String>(Arrays.asList("Mathematics"));
 
-		assertEquals(eventSearchResult, dal.retrieveEventsByTag(mathTags, ""));
+		assertTrue(compareEventLists(eventSearchResult, dal.retrieveEventsByTag(mathTags, "")));
 	}
 
 	@Test
 	public void retrieveEventsByKnownOwner() {
-		assertEquals(eventSearchResult, dal.retrieveEventsByOwner(EVENT_ONE_OWNER, ""));
+		assertTrue(compareEventLists(eventSearchResult, dal.retrieveEventsByOwner(EVENT_ONE_OWNER, "")));
 	}
 
 	@Test
@@ -519,13 +527,13 @@ public class TestDAL {
 
 	@Test
 	public void retrieveEventByName() {
-		assertEquals(eventSearchResult, dal.retrieveEventsByName("Mat", ""));
+		assertTrue(compareEventLists(eventSearchResult, dal.retrieveEventsByName("Mat", "")));
 	}
 
 	@Test
 	public void retrieveEventByTime() {
-		assertEquals(eventSearchResult, dal.retrieveEventsByTime(Timestamp.valueOf("2022-04-03 14:55:10.888"),
-				Timestamp.valueOf("2022-04-05 14:55:10.888")));
+		assertTrue(compareEventLists(eventSearchResult, dal.retrieveEventsByTime(Timestamp.valueOf("2022-04-03 14:55:10.888"),
+				Timestamp.valueOf("2022-04-05 14:55:10.888"))));
 	}
 
 	@Test
@@ -533,7 +541,7 @@ public class TestDAL {
 		dal.subscribeTo(userOneId, userTwoId);
 		dal.subscribeTo(userTwoId, userOneId);
 	}
-	
+
 	@Test
 	public void subscribeToUnknownUser() {
 		exceptionRule.expect(IllegalArgumentException.class);
@@ -541,7 +549,7 @@ public class TestDAL {
 
 		dal.subscribeTo(userOneId, 0);
 	}
-	
+
 	@Test
 	public void subscribeTwice() {
 		exceptionRule.expect(IllegalArgumentException.class);
@@ -552,20 +560,20 @@ public class TestDAL {
 
 	@Test
 	public void retrieveSubscriptionsFromUser() {
-		assertEquals(userSearchResult,dal.retrieveSubscriptions(userOneId));
+		assertTrue(compareUserLists(userSearchResult, dal.retrieveSubscriptions(userOneId)));
 	}
-	
+
 	@Test
 	public void retrieveSubscribersFromUser() {
-		assertEquals(userSearchResult,dal.retrieveSubscribers(userTwoId));
+		assertTrue(compareUserLists(userSearchResult, dal.retrieveSubscribers(userTwoId)));
 	}
-	
+
 	@Test
 	public void unsubcribeFromExistingRelationship() {
 		dal.unsubscribeFrom(eventOneId, eventTwoId);
 		dal.unsubscribeFrom(eventTwoId, eventOneId);
 	}
-	
+
 	@Test
 	public void unsubcribeFromUnknownRelationship() {
 		exceptionRule.expect(IllegalArgumentException.class);
@@ -586,35 +594,168 @@ public class TestDAL {
 
 		dal.rsvpTo("", USER_ONE_FIRST_NAME, eventTwoId, EVENT_ONE_TIME);
 	}
-	
+
 	@Test
 	public void rsvpTwice() {
 		exceptionRule.expect(IllegalArgumentException.class);
 		exceptionRule.expectMessage("Cannot RSVP to the same event twice");
 
-		dal.rsvpTo(USER_ONE_EMAIL, USER_ONE_FIRST_NAME, eventTwoId, EVENT_ONE_TIME);	
+		dal.rsvpTo(USER_ONE_EMAIL, USER_ONE_FIRST_NAME, eventTwoId, EVENT_ONE_TIME);
 	}
 
 	@Test
 	public void retrieveRsvpdEvents() {
-		assertEquals(eventSearchResult,dal.retrieveRsvpdEvents(USER_ONE_EMAIL,""));
+		assertTrue(compareEventLists(eventSearchResult, dal.retrieveRsvpdEvents(USER_ONE_EMAIL, "")));
 	}
-	
-	@Test 
+
+	@Test
 	public void retrieveAttendeesList() {
-		assertEquals(userSearchResult,dal.retrieveAttendees(eventTwoId));
+		assertTrue(compareUserLists(userSearchResult, dal.retrieveAttendees(eventTwoId)));
 	}
-	
-	@Test 
+
+	@Test
 	public void unRsvpFromKnownEvent() {
 		dal.unRsvpFrom(USER_ONE_EMAIL, eventTwoId);
 	}
-	
-	@Test 
+
+	@Test
 	public void unRsvpFromUnknownEvent() {
 		exceptionRule.expect(IllegalArgumentException.class);
 		exceptionRule.expectMessage("User is not RSVPd to this event");
-		
+
 		dal.unRsvpFrom(USER_ONE_EMAIL, eventTwoId);
+	}
+
+	private static boolean compareUsers(JSONObject uOne, JSONObject uTwo) {
+		int uOneId = (int) uOne.get("uID");
+		String uOneFirst = (String) uOne.get("firstName");
+		String uOneLast = (String) uOne.get("lastName");
+		String uOneEmail = (String) uOne.get("email");
+		String uOneCampus = (String) uOne.get("campus");
+
+		int uTwoId = (int) uTwo.get("uID");
+		String uTwoFirst = (String) uTwo.get("firstName");
+		String uTwoLast = (String) uTwo.get("lastName");
+		String uTwoEmail = (String) uTwo.get("email");
+		String uTwoCampus = (String) uTwo.get("campus");
+
+		boolean idComp = uOneId == uTwoId;
+		boolean firstComp = uOneFirst.equals(uTwoFirst);
+		boolean lastComp = uOneLast.equals(uTwoLast);
+		boolean emailComp = uOneEmail.equals(uTwoEmail);
+		boolean campusComp = uOneCampus.equals(uTwoCampus);
+
+		return idComp && firstComp && lastComp && emailComp && campusComp;
+	}
+
+	private static boolean compareEvents(JSONObject eOne, JSONObject eTwo) {
+		int eOneId = (int) eOne.get("eID");
+		int eOneOwner = (int) eOne.get("owner");
+		Timestamp eOneTime = (Timestamp) eOne.get("eventTime");
+		String eOneUrl = (String) eOne.get("posterUrl");
+		String eOneName = (String) eOne.get("name");
+		String eOneDescription = (String) eOne.get("description");
+		String eOneLocation = (String) eOne.get("location");
+		String eOnePopularity = (String) eOne.get("popularity");
+		String eOneStatus = (String) eOne.get("status");
+
+		int eTwoId = (int) eTwo.get("eID");
+		int eTwoOwner = (int) eTwo.get("owner");
+		Timestamp eTwoTime = (Timestamp) eTwo.get("eventTime");
+		String eTwoUrl = (String) eTwo.get("posterUrl");
+		String eTwoName = (String) eTwo.get("name");
+		String eTwoDescription = (String) eTwo.get("description");
+		String eTwoLocation = (String) eTwo.get("location");
+		String eTwoPopularity = (String) eTwo.get("popularity");
+		String eTwoStatus = (String) eTwo.get("status");
+		
+		JSONArray tagsOne = (JSONArray) eOne.get("tags");
+		JSONArray tagsTwo= (JSONArray) eTwo.get("tags");
+
+		if (tagsOne.size() != tagsTwo.size()) {
+			return false;
+		}
+
+		boolean idComp = eOneId == eTwoId;
+		boolean ownerComp = eOneOwner == eTwoOwner;
+		boolean timeComp = eOneTime.equals(eTwoTime);
+		boolean urlComp = eOneUrl.equals(eTwoUrl);
+		boolean nameComp = eOneName.equals(eTwoName);
+		boolean descriptionComp = eOneDescription.equals(eTwoDescription);
+		boolean locationComp = eOneLocation.equals(eTwoLocation);
+		boolean popularityComp = eOnePopularity.equals(eTwoPopularity);
+		boolean statusComp = eOneStatus.equals(eTwoStatus);
+		
+		boolean tagsComp = true;
+		for (int i = 0; i < tagsOne.size(); i++) {
+			String eOneTag = (String) tagsOne.get(i);
+			String eTwoTag = (String) tagsTwo.get(i);
+			
+			tagsComp = tagsComp & eOneTag.equals(eTwoTag);
+		}
+
+		return tagsComp && idComp && ownerComp && timeComp && urlComp && nameComp && descriptionComp && locationComp
+				&& popularityComp && statusComp;
+	}
+	
+	private static boolean compareEventLists(JSONObject listOne, JSONObject listTwo) {
+		JSONArray arrOne = (JSONArray) listOne.get("events");
+		JSONArray arrTwo= (JSONArray) listTwo.get("events");
+
+		if (arrOne.size() != arrTwo.size()) {
+			return false;
+		}
+		
+		boolean equals = true;
+		for (int i = 0; i < arrOne.size(); i++) {
+			JSONObject eOne = (JSONObject) arrOne.get(i);
+			int eOneId = (int) eOne.get("eID");
+			int eOneOwner = (int) eOne.get("owner");
+			String eOneUrl = (String) eOne.get("posterUrl");
+			String eOneName = (String) eOne.get("name");
+			
+			JSONObject eTwo = (JSONObject) arrTwo.get(i);
+			int eTwoId = (int) eTwo.get("eID");
+			int eTwoOwner = (int) eTwo.get("owner");
+			String eTwoUrl = (String) eTwo.get("posterUrl");
+			String eTwoName = (String) eTwo.get("name");
+			
+			boolean idComp = eOneId == eTwoId;
+			boolean ownerComp = eOneOwner == eTwoOwner;
+			boolean urlComp = eOneUrl.equals(eTwoUrl);
+			boolean nameComp = eOneName.equals(eTwoName);
+			
+			equals = equals & idComp & ownerComp & urlComp & nameComp;
+		}
+		return equals;
+	}
+	
+	private static boolean compareUserLists(JSONObject listOne, JSONObject listTwo) {
+		JSONArray arrOne = (JSONArray) listOne.get("events");
+		JSONArray arrTwo= (JSONArray) listTwo.get("events");
+
+		if (arrOne.size() != arrTwo.size()) {
+			return false;
+		}
+		
+		boolean equals = true;
+		for (int i = 0; i < arrOne.size(); i++) {
+			JSONObject uOne = (JSONObject) arrOne.get(i);
+			int uOneId = (int) uOne.get("uID");
+			String uOneFirst = (String) uOne.get("firstName");
+			String uOneLast = (String) uOne.get("lastName");
+
+			JSONObject uTwo = (JSONObject) arrTwo.get(i);
+			int uTwoId = (int) uTwo.get("uID");
+			String uTwoFirst = (String) uTwo.get("firstName");
+			String uTwoLast = (String) uTwo.get("lastName");
+
+			boolean idComp = uOneId == uTwoId;
+			boolean firstComp = uOneFirst.equals(uTwoFirst);
+			boolean lastComp = uOneLast.equals(uTwoLast);
+			
+			equals = equals & idComp & firstComp & lastComp;
+		}
+		return equals;
 	}
 }

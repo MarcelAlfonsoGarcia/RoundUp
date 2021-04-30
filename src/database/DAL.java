@@ -35,6 +35,8 @@ public class DAL {
 	 *         are finished
 	 */
 	private DAL() {
+		String username = "magb2017@mymail.pomona.edu";
+		String password = "rDHeR7Wz[eL4R/k";
 		String dbUrl = System.getenv("JDBC_DATABASE_URL");
 		try {
 			c = DriverManager.getConnection(dbUrl);
