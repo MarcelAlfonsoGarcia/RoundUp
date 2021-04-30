@@ -27,12 +27,14 @@ public class TestDAL {
 	private static final String USER_ONE_FIRST_NAME = "John";
 	private static final String USER_ONE_LAST_NAME = "Doe";
 	private static final String USER_ONE_EMAIL = "john.doe@pomona.edu";
+	private static final String USER_ONE_PASSWORD = "password";
 	private static final String USER_ONE_CAMPUS = "POM";
 
 	private static int userTwoId;
 	private static final String USER_TWO_FIRST_NAME = "Sue";
 	private static final String USER_TWO_LAST_NAME = "Storm";
 	private static final String USER_TWO_EMAIL = "sue.storm@hmc.edu";
+	private static final String USER_TWO_PASSWORD = "1234";
 	private static final String USER_TWO_CAMPUS = "HMC";
 
 	private static int eventOneId;
@@ -152,27 +154,32 @@ public class TestDAL {
 	@Test
 	// @Order(1)
 	public void createValidUser() {
-		assertEquals(userOne, dal.createUser(USER_ONE_FIRST_NAME, USER_ONE_LAST_NAME, USER_ONE_EMAIL, USER_ONE_CAMPUS));
-		assertEquals(userTwo, dal.createUser(USER_TWO_FIRST_NAME, USER_TWO_LAST_NAME, USER_TWO_EMAIL, USER_TWO_CAMPUS));
+		assertEquals(userOne, dal.createUser(USER_ONE_FIRST_NAME, USER_ONE_LAST_NAME, USER_ONE_EMAIL, USER_ONE_PASSWORD, USER_ONE_CAMPUS));
+		assertEquals(userTwo, dal.createUser(USER_TWO_FIRST_NAME, USER_TWO_LAST_NAME, USER_TWO_EMAIL, USER_TWO_PASSWORD, USER_TWO_CAMPUS));
 	}
 
 	@Test
 	public void createNullNameUser() {
 		exceptionRule.expect(IllegalArgumentException.class);
 		exceptionRule.expectMessage("First Name cannot be left empty");
-		dal.createUser("", USER_ONE_LAST_NAME, USER_ONE_EMAIL, USER_ONE_CAMPUS);
+		dal.createUser("", USER_ONE_LAST_NAME, USER_ONE_EMAIL, USER_ONE_PASSWORD, USER_ONE_CAMPUS);
 
 		exceptionRule.expect(IllegalArgumentException.class);
 		exceptionRule.expectMessage("Last Name cannot be left empty");
-		dal.createUser(USER_ONE_FIRST_NAME, "", USER_ONE_EMAIL, USER_ONE_CAMPUS);
+		dal.createUser(USER_ONE_FIRST_NAME, "", USER_ONE_EMAIL, USER_ONE_PASSWORD, USER_ONE_CAMPUS);
 	}
 
 	@Test
-	public void createNullEmailUser() {
+	public void createNullLoginUser() {
 		exceptionRule.expect(IllegalArgumentException.class);
 		exceptionRule.expectMessage("Email cannot be left empty");
 
-		dal.createUser(USER_ONE_FIRST_NAME, USER_ONE_LAST_NAME, "", USER_ONE_CAMPUS);
+		dal.createUser(USER_ONE_FIRST_NAME, USER_ONE_LAST_NAME, "", USER_ONE_PASSWORD, USER_ONE_CAMPUS);
+		
+		exceptionRule.expect(IllegalArgumentException.class);
+		exceptionRule.expectMessage("Password cannot be left empty");
+
+		dal.createUser(USER_ONE_FIRST_NAME, USER_ONE_LAST_NAME, USER_TWO_EMAIL, "", USER_ONE_CAMPUS);
 	}
 
 	@Test
@@ -180,9 +187,28 @@ public class TestDAL {
 		exceptionRule.expect(IllegalArgumentException.class);
 		exceptionRule.expectMessage("The email provided is already in use");
 
-		dal.createUser(USER_ONE_FIRST_NAME, USER_ONE_LAST_NAME, USER_ONE_EMAIL, USER_ONE_CAMPUS);
+		dal.createUser(USER_ONE_FIRST_NAME, USER_ONE_LAST_NAME, USER_ONE_EMAIL, USER_TWO_PASSWORD, USER_ONE_CAMPUS);
 	}
 
+	@Test
+	public void logInExistingUser() {
+		assertEquals(userOne, dal.logInUser(USER_ONE_EMAIL, USER_ONE_PASSWORD));
+		assertEquals(userTwo, dal.logInUser(USER_TWO_EMAIL, USER_TWO_PASSWORD));
+	}
+	
+	@Test
+	public void logInBadFields() {
+		exceptionRule.expect(IllegalArgumentException.class);
+		exceptionRule.expectMessage("Email or Password is incorrect");
+
+		dal.logInUser("jonlol", USER_TWO_PASSWORD);
+		
+		exceptionRule.expect(IllegalArgumentException.class);
+		exceptionRule.expectMessage("Email or Password is incorrect");
+
+		dal.logInUser(USER_ONE_EMAIL, "password1");
+	}
+	
 	@Test
 	public void retrieveExistingUser() {
 		assertEquals(userOne, dal.retrieveUser(userOneId));

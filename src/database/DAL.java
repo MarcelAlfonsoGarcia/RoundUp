@@ -40,7 +40,7 @@ public class DAL {
 			c = DriverManager.getConnection(dbUrl);
 		} catch (SQLException e) {
 			// TODO Auto-generated catch block
-			e.printStackTrace();
+			e.printStackTrace(); 
 		}
 	}
 
@@ -63,13 +63,18 @@ public class DAL {
 	 * @param firstName: the first name of the user to be created
 	 * @param lastName: the last name of the user to be created
 	 * @param email: the email of the user to be created
+	 * @param password: the password of the user to be created
 	 * @param campus: the campus of the user to be created
 	 * @return user: A JSON object representing the newly created user, it includes
 	 *         the userId
 	 * 
 	 *         This method will create the user in the database through data input.
+	 *         
+	 *         Because data safety is not our main concern in this phase of the project,
+	 *         we will simply be storing passwords as strings and checking them against
+	 *         each other,
 	 */
-	public JSONObject createUser(String firstName, String lastName, String email, String campus) {
+	public JSONObject createUser(String firstName, String lastName, String email, String password, String campus) {
 
 		if (firstName == null || firstName.isEmpty()) {
 			throw new IllegalArgumentException("First Name cannot be left empty");
@@ -77,6 +82,8 @@ public class DAL {
 			throw new IllegalArgumentException("Last Name cannot be left empty");
 		} else if (email == null || email.isEmpty()) {
 			throw new IllegalArgumentException("Email cannot be left empty");
+		} else if (password == null || password.isEmpty()) {
+			throw new IllegalArgumentException("Password cannot be left empty");
 		}
 
 		try (Statement s = c.createStatement()) {
@@ -87,12 +94,11 @@ public class DAL {
 				throw new IllegalArgumentException("The email provided is already in use");
 			} else {
 				StringBuilder query = new StringBuilder(
-						"INSERT INTO users (firstName, lastName, email, campus) VALUES (");
+						"INSERT INTO users (firstName, lastName, email, password, campus) VALUES (");
 				query.append(firstName).append(", ").append(lastName).append(", ").append(email).append(", ")
-						.append(campus).append(") RETURNING *;");
+					.append(password).append(", ").append(campus).append(") RETURNING *;");
 
-				ResultSet userResult = s.executeQuery(query.toString());
-				return userJsonTransformer(userResult);
+				return userJsonTransformer(s.executeQuery(query.toString()));
 			}
 		} catch (SQLException e) {
 			e.printStackTrace();
@@ -100,6 +106,37 @@ public class DAL {
 		}
 	}
 
+	/**
+	 * @param email: the email of the user we want to retrieve information from
+	 * @param password: the password of the user we want to retrieve information from
+	 * @return user: A JSON object with all the information of the user retrieved
+	 * 
+	 *         This method will obtain all the user information stored in the user
+	 *         table of the database.
+	 * 
+	 *         Query results will be transformed into JSON with the
+	 *         userJsonTransformer method
+	 */
+	public JSONObject logInUser(String email, String password) {
+
+		try (Statement s = c.createStatement()) {
+
+			String check = "EXISTS (SELECT 1 FROM users WHERE email = " + email + " AND password = " + password + ");";
+
+			// if check returns false then throw error
+			if (!s.execute(check)) {
+				throw new IllegalArgumentException("Email or Password is incorrect");
+			} else {
+				ResultSet userResult = s.executeQuery("SELECT * FROM users WHERE email = " + email + " AND password = " + password + ";");
+
+				return userJsonTransformer(userResult);
+			}
+		} catch (SQLException e) {
+			e.printStackTrace();
+			throw new IllegalArgumentException("Could not retrieve user from the database: " + e.getMessage());
+		}
+	}
+	
 	/**
 	 * @param userId: the id of the user we want to retrieve information from
 	 * @return user: A JSON object with all the information of the user retrieved
@@ -120,7 +157,7 @@ public class DAL {
 			if (!s.execute(check)) {
 				throw new IllegalArgumentException("No user exists under the provided information");
 			} else {
-				ResultSet userResult = s.executeQuery("SELECT * FROM users WHERE uID = " + userId);
+				ResultSet userResult = s.executeQuery("SELECT * FROM users WHERE uID = " + userId + ";");
 
 				return userJsonTransformer(userResult);
 			}
@@ -147,7 +184,6 @@ public class DAL {
 				s.executeUpdate("DELETE FROM users WHERE uID = " + userId);
 			}
 		} catch (SQLException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 			throw new IllegalArgumentException("Could not delete user from the datbase: " + e.getMessage());
 		}
