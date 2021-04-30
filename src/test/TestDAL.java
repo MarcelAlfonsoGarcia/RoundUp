@@ -1,11 +1,11 @@
 package test;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.fail;
 
 import java.sql.Timestamp;
 import java.util.Arrays;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 
 import org.json.simple.JSONArray;
@@ -14,27 +14,30 @@ import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Rule;
 import org.junit.Test;
+//import org.junit.jupiter.api.MethodOrderer.OrderAnnotation;
+//import org.junit.jupiter.api.Order;
 import org.junit.rules.ExpectedException;
 
 import database.DAL;
 
+//@TestMethodOrder(OrderAnnotation.class)
 public class TestDAL {
 
-	private static int usrOneId;
-	private static final String USR_ONE_FIRST_NAME = "John";
-	private static final String USR_ONE_SECOND_NAME = "Doe";
-	private static final String USR_ONE_EMAIL = "john.doe@pomona.edu";
-	private static final String USR_ONE_CAMPUS = "POM";
+	private static int userOneId;
+	private static final String USER_ONE_FIRST_NAME = "John";
+	private static final String USER_ONE_LAST_NAME = "Doe";
+	private static final String USER_ONE_EMAIL = "john.doe@pomona.edu";
+	private static final String USER_ONE_CAMPUS = "POM";
 
-	private static int usrTwoId;
-	private static final String USR_TWO_FIRST_NAME = "Sue";
-	private static final String USR_TWO_SECOND_NAME = "Storm";
-	private static final String USR_TWO_EMAIL = "sue.storm@hmc.edu";
-	private static final String USR_TWO_CAMPUS = "HMC";
+	private static int userTwoId;
+	private static final String USER_TWO_FIRST_NAME = "Sue";
+	private static final String USER_TWO_LAST_NAME = "Storm";
+	private static final String USER_TWO_EMAIL = "sue.storm@hmc.edu";
+	private static final String USER_TWO_CAMPUS = "HMC";
 
 	private static int eventOneId;
 	private static final int EVENT_ONE_OWNER = 1;
-	private static final Timestamp EVENT_ONE_TIME = Timestamp.valueOf("2022-04-04 14:55:10.888");;
+	private static final Timestamp EVENT_ONE_TIME = Timestamp.valueOf("2022-04-04 14:55:10.888");
 	private static final String EVENT_ONE_POSTER_URL = "url1";
 	private static final String EVENT_ONE_NAME = "Math Colloquium";
 	private static final String EVENT_ONE_DESCRIPTION = "There is a thingy with math";
@@ -43,7 +46,7 @@ public class TestDAL {
 	private static final String EVENT_ONE_STATUS = "active";
 	private static final Set<String> EVENT_ONE_TAGS = new HashSet<String>(Arrays.asList("Mathematics", "Colloquium"));
 
-	private static int eventTwoId = 2;
+	private static int eventTwoId;
 	private static final int EVENT_TWO_OWNER = 2;
 	private static final Timestamp EVENT_TWO_TIME = Timestamp.valueOf("2022-04-04 14:55:15.888");
 	private static final String EVENT_TWO_POSTER_URL = "url2";
@@ -61,24 +64,27 @@ public class TestDAL {
 	private static JSONObject eventOne;
 	private static JSONObject eventTwo;
 
+	private static JSONObject userSearchResult;
+	private static JSONObject eventSearchResult;
+
 	private static DAL dal;
 
 	@SuppressWarnings("unchecked")
 	@BeforeClass
 	public static void setUpBeforeClass() throws Exception {
 		userOne = new JSONObject();
-		userOne.put("uID", usrOneId);
-		userOne.put("firstName", USR_ONE_FIRST_NAME);
-		userOne.put("lastName", USR_ONE_SECOND_NAME);
-		userOne.put("email", USR_ONE_EMAIL);
-		userOne.put("campus", USR_ONE_CAMPUS);
+		userOne.put("uID", userOneId);
+		userOne.put("firstName", USER_ONE_FIRST_NAME);
+		userOne.put("lastName", USER_ONE_LAST_NAME);
+		userOne.put("email", USER_ONE_EMAIL);
+		userOne.put("campus", USER_ONE_CAMPUS);
 
 		userTwo = new JSONObject();
-		userTwo.put("uID", usrTwoId);
-		userTwo.put("firstName", USR_TWO_FIRST_NAME);
-		userTwo.put("lastName", USR_TWO_SECOND_NAME);
-		userTwo.put("email", USR_TWO_EMAIL);
-		userTwo.put("campus", USR_TWO_CAMPUS);
+		userTwo.put("uID", userTwoId);
+		userTwo.put("firstName", USER_TWO_FIRST_NAME);
+		userTwo.put("lastName", USER_TWO_LAST_NAME);
+		userTwo.put("email", USER_TWO_EMAIL);
+		userTwo.put("campus", USER_TWO_CAMPUS);
 
 		eventOne = new JSONObject();
 		eventOne.put("eID", eventOneId);
@@ -96,7 +102,7 @@ public class TestDAL {
 			eventOneTags.add(tag);
 		}
 		eventOne.put("tags", eventOneTags);
-		
+
 		eventTwo = new JSONObject();
 		eventTwo.put("eID", eventTwoId);
 		eventTwo.put("owner", EVENT_TWO_OWNER);
@@ -113,7 +119,26 @@ public class TestDAL {
 			eventTwoTags.add(tag);
 		}
 		eventTwo.put("tags", eventTwoTags);
-		
+
+		eventSearchResult = new JSONObject();
+		JSONArray userResults = new JSONArray();
+		JSONObject user = new JSONObject();
+		user.put("uID", userOneId);
+		user.put("firstName", USER_ONE_FIRST_NAME);
+		user.put("name", USER_ONE_LAST_NAME);
+		userResults.add(user);
+		eventSearchResult.put("events", userResults);
+
+		eventSearchResult = new JSONObject();
+		JSONArray eventResults = new JSONArray();
+		JSONObject event = new JSONObject();
+		event.put("eID", eventOneId);
+		event.put("owner", EVENT_ONE_OWNER);
+		event.put("name", EVENT_ONE_NAME);
+		event.put("posterUrl", EVENT_ONE_POSTER_URL);
+		eventResults.add(event);
+		eventSearchResult.put("events", eventResults);
+
 		dal = DAL.getInstance();
 	}
 
@@ -125,20 +150,21 @@ public class TestDAL {
 	public ExpectedException exceptionRule = ExpectedException.none();
 
 	@Test
+	// @Order(1)
 	public void createValidUser() {
-		assertEquals(userOne, dal.createUser(USR_ONE_FIRST_NAME, USR_ONE_SECOND_NAME, USR_ONE_EMAIL, USR_ONE_CAMPUS));
-		assertEquals(userTwo, dal.createUser(USR_TWO_FIRST_NAME, USR_TWO_SECOND_NAME, USR_TWO_EMAIL, USR_TWO_CAMPUS));
+		assertEquals(userOne, dal.createUser(USER_ONE_FIRST_NAME, USER_ONE_LAST_NAME, USER_ONE_EMAIL, USER_ONE_CAMPUS));
+		assertEquals(userTwo, dal.createUser(USER_TWO_FIRST_NAME, USER_TWO_LAST_NAME, USER_TWO_EMAIL, USER_TWO_CAMPUS));
 	}
 
 	@Test
 	public void createNullNameUser() {
 		exceptionRule.expect(IllegalArgumentException.class);
 		exceptionRule.expectMessage("First Name cannot be left empty");
-		dal.createUser("", USR_ONE_SECOND_NAME, USR_ONE_EMAIL, USR_ONE_CAMPUS);
+		dal.createUser("", USER_ONE_LAST_NAME, USER_ONE_EMAIL, USER_ONE_CAMPUS);
 
 		exceptionRule.expect(IllegalArgumentException.class);
 		exceptionRule.expectMessage("Last Name cannot be left empty");
-		dal.createUser(USR_ONE_FIRST_NAME, "", USR_ONE_EMAIL, USR_ONE_CAMPUS);
+		dal.createUser(USER_ONE_FIRST_NAME, "", USER_ONE_EMAIL, USER_ONE_CAMPUS);
 	}
 
 	@Test
@@ -146,7 +172,7 @@ public class TestDAL {
 		exceptionRule.expect(IllegalArgumentException.class);
 		exceptionRule.expectMessage("Email cannot be left empty");
 
-		dal.createUser(USR_ONE_FIRST_NAME, USR_ONE_SECOND_NAME, "", USR_ONE_CAMPUS);
+		dal.createUser(USER_ONE_FIRST_NAME, USER_ONE_LAST_NAME, "", USER_ONE_CAMPUS);
 	}
 
 	@Test
@@ -154,12 +180,12 @@ public class TestDAL {
 		exceptionRule.expect(IllegalArgumentException.class);
 		exceptionRule.expectMessage("The email provided is already in use");
 
-		dal.createUser(USR_ONE_FIRST_NAME, USR_ONE_SECOND_NAME, USR_ONE_EMAIL, USR_ONE_CAMPUS);
+		dal.createUser(USER_ONE_FIRST_NAME, USER_ONE_LAST_NAME, USER_ONE_EMAIL, USER_ONE_CAMPUS);
 	}
 
 	@Test
 	public void retrieveExistingUser() {
-		assertEquals(userOne, dal.retrieveUser(usrOneId));
+		assertEquals(userOne, dal.retrieveUser(userOneId));
 	}
 
 	@Test
@@ -173,8 +199,8 @@ public class TestDAL {
 	@Test
 	public void deleteExistingUser() {
 		// TODO: verify deletion
-		dal.deleteUser(usrOneId);
-		dal.deleteUser(usrTwoId);
+		dal.deleteUser(userOneId);
+		dal.deleteUser(userTwoId);
 	}
 
 	@Test
@@ -189,14 +215,14 @@ public class TestDAL {
 	@Test
 	public void updateExistingUser() {
 		JSONObject updatedUser = new JSONObject();
-		updatedUser.put("uID", usrOneId);
+		updatedUser.put("uID", userOneId);
 		updatedUser.put("firstName", "Jack");
 		updatedUser.put("lastName", "Savage");
 		updatedUser.put("email", "jack.savage@email.com");
 		updatedUser.put("campus", "CMC");
 
-		assertEquals(updatedUser, dal.updateUser(usrOneId, "Jack", "Savage", "jack.savage@email.com", "CMC"));
-		dal.updateUser(usrOneId, USR_ONE_FIRST_NAME, USR_ONE_SECOND_NAME, USR_ONE_EMAIL, USR_ONE_CAMPUS);
+		assertEquals(updatedUser, dal.updateUser(userOneId, "Jack", "Savage", "jack.savage@email.com", "CMC"));
+		dal.updateUser(userOneId, USER_ONE_FIRST_NAME, USER_ONE_LAST_NAME, USER_ONE_EMAIL, USER_ONE_CAMPUS);
 	}
 
 	@Test
@@ -204,7 +230,7 @@ public class TestDAL {
 		exceptionRule.expect(IllegalArgumentException.class);
 		exceptionRule.expectMessage("No user exists under the provided information");
 
-		dal.updateUser(0, USR_ONE_FIRST_NAME, USR_ONE_SECOND_NAME, "", USR_ONE_CAMPUS);
+		dal.updateUser(0, USER_ONE_FIRST_NAME, USER_ONE_LAST_NAME, "", USER_ONE_CAMPUS);
 	}
 
 	@Test
@@ -212,12 +238,12 @@ public class TestDAL {
 		exceptionRule.expect(IllegalArgumentException.class);
 		exceptionRule.expectMessage("First Name cannot be left empty");
 
-		dal.updateUser(usrOneId, "", USR_ONE_SECOND_NAME, USR_ONE_EMAIL, USR_ONE_CAMPUS);
+		dal.updateUser(userOneId, "", USER_ONE_LAST_NAME, USER_ONE_EMAIL, USER_ONE_CAMPUS);
 
 		exceptionRule.expect(IllegalArgumentException.class);
 		exceptionRule.expectMessage("Last Name cannot be left empty");
 
-		dal.updateUser(usrOneId, USR_ONE_FIRST_NAME, "", USR_ONE_EMAIL, USR_ONE_CAMPUS);
+		dal.updateUser(userOneId, USER_ONE_FIRST_NAME, "", USER_ONE_EMAIL, USER_ONE_CAMPUS);
 	}
 
 	@Test
@@ -225,7 +251,7 @@ public class TestDAL {
 		exceptionRule.expect(IllegalArgumentException.class);
 		exceptionRule.expectMessage("Email cannot be left empty");
 
-		dal.updateUser(usrOneId, USR_ONE_FIRST_NAME, USR_ONE_SECOND_NAME, "", USR_ONE_CAMPUS);
+		dal.updateUser(userOneId, USER_ONE_FIRST_NAME, USER_ONE_LAST_NAME, "", USER_ONE_CAMPUS);
 	}
 
 	@Test
@@ -233,15 +259,15 @@ public class TestDAL {
 		exceptionRule.expect(IllegalArgumentException.class);
 		exceptionRule.expectMessage("The email provided is already in use");
 
-		dal.updateUser(usrOneId, USR_ONE_FIRST_NAME, USR_ONE_SECOND_NAME, USR_ONE_EMAIL, USR_ONE_CAMPUS);
+		dal.updateUser(userOneId, USER_ONE_FIRST_NAME, USER_ONE_LAST_NAME, USER_ONE_EMAIL, USER_ONE_CAMPUS);
 	}
 
 	@Test
 	public void createValidEvent() {
-		assertEquals(eventOne, dal.createEvent(EVENT_ONE_OWNER, EVENT_ONE_TIME, EVENT_ONE_POSTER_URL,
-				EVENT_ONE_NAME, EVENT_ONE_DESCRIPTION, EVENT_ONE_LOCATION, EVENT_ONE_TAGS));
-		assertEquals(eventOne, dal.createEvent(EVENT_TWO_OWNER, EVENT_TWO_TIME, EVENT_TWO_POSTER_URL,
-				EVENT_TWO_NAME, EVENT_TWO_DESCRIPTION, EVENT_TWO_LOCATION, EVENT_TWO_TAGS));
+		assertEquals(eventOne, dal.createEvent(EVENT_ONE_OWNER, EVENT_ONE_TIME, EVENT_ONE_POSTER_URL, EVENT_ONE_NAME,
+				EVENT_ONE_DESCRIPTION, EVENT_ONE_LOCATION, EVENT_ONE_TAGS));
+		assertEquals(eventOne, dal.createEvent(EVENT_TWO_OWNER, EVENT_TWO_TIME, EVENT_TWO_POSTER_URL, EVENT_TWO_NAME,
+				EVENT_TWO_DESCRIPTION, EVENT_TWO_LOCATION, EVENT_TWO_TAGS));
 	}
 
 	@Test
@@ -290,8 +316,8 @@ public class TestDAL {
 	@Test
 	public void deleteEvents() {
 		// TODO: verify deletion
-		dal.deleteEvent(eventOneId, usrOneId);
-		dal.deleteEvent(eventTwoId, usrTwoId);
+		dal.deleteEvent(eventOneId, userOneId);
+		dal.deleteEvent(eventTwoId, userTwoId);
 	}
 
 	@Test
@@ -299,7 +325,7 @@ public class TestDAL {
 		exceptionRule.expect(IllegalArgumentException.class);
 		exceptionRule.expectMessage("No event exists under the provided information");
 
-		dal.deleteEvent(eventOneId, usrOneId);
+		dal.deleteEvent(eventOneId, userOneId);
 		dal.deleteEvent(eventTwoId, eventTwoId);
 	}
 
@@ -441,68 +467,128 @@ public class TestDAL {
 		tagList.add("Party");
 		tagList.add("Guest Speaker/s");
 		tags.put("tags", tagList);
-		
+
 		assertEquals(tags, dal.retrieveAllTags());
 	}
 
 	@Test
-	public void testRetrieveEventsByTag() {
-		fail("Not yet implemented");
+	public void retrieveEventsByKnownTags() {
+		Set<String> mathTags = new HashSet<String>(Arrays.asList("Mathematics"));
+
+		assertEquals(eventSearchResult, dal.retrieveEventsByTag(mathTags, ""));
 	}
 
 	@Test
-	public void testRetrieveEventsByOwner() {
-		fail("Not yet implemented");
+	public void retrieveEventsByKnownOwner() {
+		assertEquals(eventSearchResult, dal.retrieveEventsByOwner(EVENT_ONE_OWNER, ""));
 	}
 
 	@Test
-	public void testRetrieveEventsByName() {
-		fail("Not yet implemented");
+	public void retrieveEventsByUnknownOwner() {
+		exceptionRule.expect(IllegalArgumentException.class);
+		exceptionRule.expectMessage("Cannot find the target user");
+
+		dal.retrieveEventsByOwner(0, "");
 	}
 
 	@Test
-	public void testRetrieveEventsByTime() {
-		fail("Not yet implemented");
+	public void retrieveEventByName() {
+		assertEquals(eventSearchResult, dal.retrieveEventsByName("Mat", ""));
 	}
 
 	@Test
-	public void testSubscribeTo() {
-		fail("Not yet implemented");
+	public void retrieveEventByTime() {
+		assertEquals(eventSearchResult, dal.retrieveEventsByTime(Timestamp.valueOf("2022-04-03 14:55:10.888"),
+				Timestamp.valueOf("2022-04-05 14:55:10.888")));
 	}
 
 	@Test
-	public void testUnsubscribeTo() {
-		fail("Not yet implemented");
+	public void subscribeToKnownUser() {
+		dal.subscribeTo(userOneId, userTwoId);
+		dal.subscribeTo(userTwoId, userOneId);
+	}
+	
+	@Test
+	public void subscribeToUnknownUser() {
+		exceptionRule.expect(IllegalArgumentException.class);
+		exceptionRule.expectMessage("User to be subscribed to does not exist");
+
+		dal.subscribeTo(userOneId, 0);
+	}
+	
+	@Test
+	public void subscribeTwice() {
+		exceptionRule.expect(IllegalArgumentException.class);
+		exceptionRule.expectMessage("Cannot subscribe to the same user twice");
+
+		dal.subscribeTo(userOneId, userTwoId);
 	}
 
 	@Test
-	public void testRetrieveSubscriptions() {
-		fail("Not yet implemented");
+	public void retrieveSubscriptionsFromUser() {
+		assertEquals(userSearchResult,dal.retrieveSubscriptions(userOneId));
+	}
+	
+	@Test
+	public void retrieveSubscribersFromUser() {
+		assertEquals(userSearchResult,dal.retrieveSubscribers(userTwoId));
+	}
+	
+	@Test
+	public void unsubcribeFromExistingRelationship() {
+		dal.unsubscribeFrom(eventOneId, eventTwoId);
+		dal.unsubscribeFrom(eventTwoId, eventOneId);
+	}
+	
+	@Test
+	public void unsubcribeFromUnknownRelationship() {
+		exceptionRule.expect(IllegalArgumentException.class);
+		exceptionRule.expectMessage("Cannot unsubscribe from unknown relationship");
+
+		dal.unsubscribeFrom(eventOneId, eventTwoId);
 	}
 
 	@Test
-	public void testRetrieveSubscribers() {
-		fail("Not yet implemented");
+	public void rsvpToExistingEvent() {
+		dal.rsvpTo(USER_ONE_EMAIL, USER_ONE_FIRST_NAME, eventTwoId, EVENT_ONE_TIME);
 	}
 
 	@Test
-	public void testRsvpTo() {
-		fail("Not yet implemented");
+	public void rsvpWithNullEmail() {
+		exceptionRule.expect(IllegalArgumentException.class);
+		exceptionRule.expectMessage("Email cannot be left empty");
+
+		dal.rsvpTo("", USER_ONE_FIRST_NAME, eventTwoId, EVENT_ONE_TIME);
+	}
+	
+	@Test
+	public void rsvpTwice() {
+		exceptionRule.expect(IllegalArgumentException.class);
+		exceptionRule.expectMessage("Cannot RSVP to the same event twice");
+
+		dal.rsvpTo(USER_ONE_EMAIL, USER_ONE_FIRST_NAME, eventTwoId, EVENT_ONE_TIME);	
 	}
 
 	@Test
-	public void testUnRsvpFrom() {
-		fail("Not yet implemented");
+	public void retrieveRsvpdEvents() {
+		assertEquals(eventSearchResult,dal.retrieveRsvpdEvents(USER_ONE_EMAIL,""));
 	}
-
-	@Test
-	public void testRetrieveRsvpdEvents() {
-		fail("Not yet implemented");
+	
+	@Test 
+	public void retrieveAttendeesList() {
+		assertEquals(userSearchResult,dal.retrieveAttendees(eventTwoId));
 	}
-
-	@Test
-	public void testRetrieveAttendees() {
-		fail("Not yet implemented");
+	
+	@Test 
+	public void unRsvpFromKnownEvent() {
+		dal.unRsvpFrom(USER_ONE_EMAIL, eventTwoId);
 	}
-
+	
+	@Test 
+	public void unRsvpFromUnknownEvent() {
+		exceptionRule.expect(IllegalArgumentException.class);
+		exceptionRule.expectMessage("User is not RSVPd to this event");
+		
+		dal.unRsvpFrom(USER_ONE_EMAIL, eventTwoId);
+	}
 }

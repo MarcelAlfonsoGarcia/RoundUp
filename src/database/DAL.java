@@ -626,7 +626,7 @@ public class DAL {
 			s.executeUpdate(query);
 		} catch (SQLException e) {
 			e.printStackTrace();
-			throw new NullPointerException("Could not subscribe to user in database: " + e.getMessage());
+			throw new NullPointerException("Could not unssubscribe from user in database: " + e.getMessage());
 		}
 	}
 
@@ -723,7 +723,7 @@ public class DAL {
 			String check = "EXISTS (SELECT 1 FROM rsvps WHERE email = " + email + " AND eID = " + eventId + ");";
 
 			if (!s.execute(check)) {
-				throw new IllegalArgumentException("User has not RSVPd to this event");
+				throw new IllegalArgumentException("User is not RSVPd to this event");
 			} else {
 				String query = "DELETE FROM rsvps WHERE email = " + email + " AND eID = " + eventId;
 				s.executeUpdate(query);
