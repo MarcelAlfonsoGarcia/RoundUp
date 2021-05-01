@@ -7,6 +7,7 @@
 */
 package database;
 
+import java.net.URI;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.ResultSet;
@@ -35,14 +36,18 @@ public class DAL {
 	 *         are finished
 	 */
 	private DAL() {
-		String username = "magb2017@mymail.pomona.edu";
-		String password = "rDHeR7Wz[eL4R/k";
-		String dbUrl = System.getenv("JDBC_DATABASE_URL");
 		try {
-			c = DriverManager.getConnection(dbUrl);
-		} catch (SQLException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace(); 
+			String dbUrls = "postgres://kproipogvexbbm:2810f0e0743eb39b9b84189023ffbd36f43f7156827da2ba984fca64633236be@ec2-54-161-239-198.compute-1.amazonaws.com:5432/d57evff6a32s3o";
+			URI dbUri = new URI(dbUrls);
+			
+		    String username = dbUri.getUserInfo().split(":")[0];
+		    String password = dbUri.getUserInfo().split(":")[1];
+		    String dbUrl = "jdbc:postgresql://" + dbUri.getHost() + ':' + dbUri.getPort() + dbUri.getPath();
+		    
+			c = DriverManager.getConnection(dbUrl, username, password);
+		} catch (Exception e) {
+			e.printStackTrace();
+			throw new NullPointerException("Could not establish a connection to the database: " + e.getMessage());
 		}
 	}
 
@@ -731,7 +736,7 @@ public class DAL {
 			String check = "EXISTS (SELECT 1 FROM rsvps WHERE email = " + email + " AND eID = " + eventId + ");";
 
 			if (s.execute(check)) {
-				throw new IllegalArgumentException("Cannot RSVP to the same event twice");
+				throw new NullPointerException("Cannot RSVP to the same event twice");
 			} else {
 				String query = "INSERT INTO rsvps (email, name, eID, time) VALUES (" + email + ", " + name + ", "
 						+ eventId + ", " + time + ");";
@@ -761,7 +766,7 @@ public class DAL {
 			String check = "EXISTS (SELECT 1 FROM rsvps WHERE email = " + email + " AND eID = " + eventId + ");";
 
 			if (!s.execute(check)) {
-				throw new IllegalArgumentException("User is not RSVPd to this event");
+				throw new NullPointerException("User is not RSVPd to this event");
 			} else {
 				String query = "DELETE FROM rsvps WHERE email = " + email + " AND eID = " + eventId;
 				s.executeUpdate(query);
