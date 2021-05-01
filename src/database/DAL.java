@@ -37,14 +37,17 @@ public class DAL {
 	 */
 	private DAL() {
 		try {
-			String dbUrls = "postgres://kproipogvexbbm:2810f0e0743eb39b9b84189023ffbd36f43f7156827da2ba984fca64633236be@ec2-54-161-239-198.compute-1.amazonaws.com:5432/d57evff6a32s3o";
-			URI dbUri = new URI(dbUrls);
-			
-		    String username = dbUri.getUserInfo().split(":")[0];
-		    String password = dbUri.getUserInfo().split(":")[1];
-		    String dbUrl = "jdbc:postgresql://" + dbUri.getHost() + ':' + dbUri.getPort() + dbUri.getPath();
-		    
-			c = DriverManager.getConnection(dbUrl, username, password);
+//			String dbUrls = "postgres://kproipogvexbbm:2810f0e0743eb39b9b84189023ffbd36f43f7156827da2ba984fca64633236be@ec2-54-161-239-198.compute-1.amazonaws.com:5432/d57evff6a32s3o";
+//			URI dbUri = new URI(dbUrls);
+//			
+//		    String username = dbUri.getUserInfo().split(":")[0];
+//		    String password = dbUri.getUserInfo().split(":")[1];
+//		    String dbUrl = "jdbc:postgresql://" + dbUri.getHost() + ':' + dbUri.getPort() + dbUri.getPath();
+
+			String dbUrl = "jdbc:postgresql://ec2-54-161-239-198.compute-1.amazonaws.com:5432/d57evff6a32s3o?password=2810f0e0743eb39b9b84189023ffbd36f43f7156827da2ba984fca64633236be&sslmode=require&user=kproipogvexbbm";
+			c = DriverManager.getConnection(dbUrl);
+
+//			c = DriverManager.getConnection(dbUrl, username, password);
 		} catch (Exception e) {
 			e.printStackTrace();
 			throw new NullPointerException("Could not establish a connection to the database: " + e.getMessage());
@@ -76,10 +79,10 @@ public class DAL {
 	 *         the userId
 	 * 
 	 *         This method will create the user in the database through data input.
-	 *         
-	 *         Because data safety is not our main concern in this phase of the project,
-	 *         we will simply be storing passwords as strings and checking them against
-	 *         each other,
+	 * 
+	 *         Because data safety is not our main concern in this phase of the
+	 *         project, we will simply be storing passwords as strings and checking
+	 *         them against each other,
 	 */
 	public JSONObject createUser(String firstName, String lastName, String email, String password, String campus) {
 
@@ -103,7 +106,7 @@ public class DAL {
 				StringBuilder query = new StringBuilder(
 						"INSERT INTO users (firstName, lastName, email, password, campus) VALUES (");
 				query.append(firstName).append(", ").append(lastName).append(", ").append(email).append(", ")
-					.append(password).append(", ").append(campus).append(") RETURNING *;");
+						.append(password).append(", ").append(campus).append(") RETURNING *;");
 
 				return userJsonTransformer(s.executeQuery(query.toString()));
 			}
@@ -115,7 +118,8 @@ public class DAL {
 
 	/**
 	 * @param email: the email of the user we want to retrieve information from
-	 * @param password: the password of the user we want to retrieve information from
+	 * @param password: the password of the user we want to retrieve information
+	 *        from
 	 * @return user: A JSON object with all the information of the user retrieved
 	 * 
 	 *         This method will obtain all the user information stored in the user
@@ -134,7 +138,8 @@ public class DAL {
 			if (!s.execute(check)) {
 				throw new IllegalArgumentException("Email or Password is incorrect");
 			} else {
-				ResultSet userResult = s.executeQuery("SELECT * FROM users WHERE email = " + email + " AND password = " + password + ";");
+				ResultSet userResult = s.executeQuery(
+						"SELECT * FROM users WHERE email = " + email + " AND password = " + password + ";");
 
 				return userJsonTransformer(userResult);
 			}
@@ -143,7 +148,7 @@ public class DAL {
 			throw new IllegalArgumentException("Could not retrieve user from the database: " + e.getMessage());
 		}
 	}
-	
+
 	/**
 	 * @param userId: the id of the user we want to retrieve information from
 	 * @return user: A JSON object with all the information of the user retrieved
@@ -886,7 +891,7 @@ public class DAL {
 			tags.add(tagsRs.getString("tag"));
 		}
 		event.put("tags", tags);
-		
+
 		eventRs.close();
 		tagsRs.close();
 		return event;
