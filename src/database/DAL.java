@@ -7,15 +7,16 @@
 */
 package database;
 
-import java.net.URI;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.sql.Timestamp;
-import java.util.List;
+import java.util.Iterator;
 import java.util.Set;
+import java.util.StringJoiner;
+
 import org.json.simple.JSONObject;
 import org.json.simple.JSONArray;
 
@@ -71,10 +72,10 @@ public class DAL {
 
 	/**
 	 * @param firstName: the first name of the user to be created
-	 * @param lastName: the last name of the user to be created
-	 * @param email: the email of the user to be created
-	 * @param password: the password of the user to be created
-	 * @param campus: the campus of the user to be created
+	 * @param lastName:  the last name of the user to be created
+	 * @param email:     the email of the user to be created
+	 * @param password:  the password of the user to be created
+	 * @param campus:    the campus of the user to be created
 	 * @return user: A JSON object representing the newly created user, it includes
 	 *         the userId
 	 * 
@@ -97,19 +98,13 @@ public class DAL {
 		}
 
 		try (Statement s = c.createStatement()) {
-			String check = "EXISTS (SELECT 1 FROM users WHERE email = " + email + ");";
+			StringBuilder query = new StringBuilder(
+					"INSERT INTO users (firstName, lastName, email, password, campus) VALUES (");
+			query.append("'" + firstName + "'").append(", ").append("'" + lastName + "'").append(", ")
+					.append("'" + email + "'").append(", ").append("'" + password + "'").append(", ")
+					.append("'" + campus + "'").append(") RETURNING *;");
 
-			// if check returns true then throw error
-			if (s.execute(check)) {
-				throw new IllegalArgumentException("The email provided is already in use");
-			} else {
-				StringBuilder query = new StringBuilder(
-						"INSERT INTO users (firstName, lastName, email, password, campus) VALUES (");
-				query.append(firstName).append(", ").append(lastName).append(", ").append(email).append(", ")
-						.append(password).append(", ").append(campus).append(") RETURNING *;");
-
-				return userJsonTransformer(s.executeQuery(query.toString()));
-			}
+			return userJsonTransformer(s.executeQuery(query.toString()));
 		} catch (SQLException e) {
 			e.printStackTrace();
 			throw new IllegalArgumentException("Cannot create user in the database: " + e.getMessage());
@@ -117,9 +112,9 @@ public class DAL {
 	}
 
 	/**
-	 * @param email: the email of the user we want to retrieve information from
+	 * @param email:    the email of the user we want to retrieve information from
 	 * @param password: the password of the user we want to retrieve information
-	 *        from
+	 *                  from
 	 * @return user: A JSON object with all the information of the user retrieved
 	 * 
 	 *         This method will obtain all the user information stored in the user
@@ -131,18 +126,10 @@ public class DAL {
 	public JSONObject logInUser(String email, String password) {
 
 		try (Statement s = c.createStatement()) {
+			ResultSet userResult = s.executeQuery(
+					"SELECT * FROM users WHERE email = '" + email + "' AND password = '" + password + "';");
 
-			String check = "EXISTS (SELECT 1 FROM users WHERE email = " + email + " AND password = " + password + ");";
-
-			// if check returns false then throw error
-			if (!s.execute(check)) {
-				throw new IllegalArgumentException("Email or Password is incorrect");
-			} else {
-				ResultSet userResult = s.executeQuery(
-						"SELECT * FROM users WHERE email = " + email + " AND password = " + password + ";");
-
-				return userJsonTransformer(userResult);
-			}
+			return userJsonTransformer(userResult);
 		} catch (SQLException e) {
 			e.printStackTrace();
 			throw new IllegalArgumentException("Could not retrieve user from the database: " + e.getMessage());
@@ -160,19 +147,10 @@ public class DAL {
 	 *         userJsonTransformer method
 	 */
 	public JSONObject retrieveUser(int userId) {
-
 		try (Statement s = c.createStatement()) {
+			ResultSet userResult = s.executeQuery("SELECT * FROM users WHERE uID = " + userId + ";");
 
-			String check = "EXISTS (SELECT 1 FROM users WHERE uID = " + userId + ");";
-
-			// if check returns false then throw error
-			if (!s.execute(check)) {
-				throw new IllegalArgumentException("No user exists under the provided information");
-			} else {
-				ResultSet userResult = s.executeQuery("SELECT * FROM users WHERE uID = " + userId + ";");
-
-				return userJsonTransformer(userResult);
-			}
+			return userJsonTransformer(userResult);
 		} catch (SQLException e) {
 			e.printStackTrace();
 			throw new IllegalArgumentException("Could not retrieve user from the database: " + e.getMessage());
@@ -187,14 +165,16 @@ public class DAL {
 	 */
 	public void deleteUser(int userId) {
 		try (Statement s = c.createStatement()) {
-			String check = "EXISTS (SELECT 1 FROM users WHERE uID = " + userId + ");";
-
-			// if check returns false then throw error
-			if (!s.execute(check)) {
-				throw new IllegalArgumentException("No user exists under the provided information");
-			} else {
-				s.executeUpdate("DELETE FROM users WHERE uID = " + userId);
+			String check = "SELECT * FROM users WHERE uID = " + userId + ";";
+			ResultSet checkResult = s.executeQuery(check);
+			
+			if (!checkResult.next()) {
+				throw new NullPointerException("No user exists under the provided information");
 			}
+			
+			s.executeUpdate("DELETE FROM subscribes WHERE followerID = " + userId + " OR followedID = " + userId + ";");
+			s.executeUpdate("DELETE FROM events WHERE owner = " + userId + ";");
+			s.executeUpdate("DELETE FROM users WHERE uID = " + userId + ";");
 		} catch (SQLException e) {
 			e.printStackTrace();
 			throw new IllegalArgumentException("Could not delete user from the datbase: " + e.getMessage());
@@ -202,12 +182,12 @@ public class DAL {
 	}
 
 	/**
-	 * @param userId: the user id of the user to be updated
+	 * @param userId:    the user id of the user to be updated
 	 * @param firstName: the first name of the user to be updated
-	 * @param lastName: the last name of the user to be updated
-	 * @param email: the email of the user to be updated
-	 * @param campus: the campus of the user to be updated
-	 * @param cohort: the cohort of the user to be updated
+	 * @param lastName:  the last name of the user to be updated
+	 * @param email:     the email of the user to be updated
+	 * @param campus:    the campus of the user to be updated
+	 * @param cohort:    the cohort of the user to be updated
 	 * @return user: A JSON object representing the newly updated user
 	 * 
 	 *         This method will update all the fields in the database for a specific
@@ -217,7 +197,6 @@ public class DAL {
 	 *         userJsonTransformer method
 	 */
 	public JSONObject updateUser(int userId, String firstName, String lastName, String email, String campus) {
-		// TODO: check that the new email is not already in use
 		if (firstName == null || firstName.isEmpty()) {
 			throw new IllegalArgumentException("First Name cannot be left empty");
 		} else if (lastName == null || lastName.isEmpty()) {
@@ -227,22 +206,15 @@ public class DAL {
 		}
 
 		try (Statement s = c.createStatement()) {
-			String check = "EXISTS (SELECT 1 FROM users WHERE uID = " + userId + ");";
+			StringBuilder query = new StringBuilder("UPDATE users SET ");
+			query.append("firstName = '" + firstName).append("', ").append("lastName = '" + lastName).append("', ")
+					.append("email = '" + email).append("', ").append("campus = '" + campus);
+			query.append("' WHERE uID =" + userId);
+			query.append(" RETURNING *;");
 
-			// if check returns false then throw error
-			if (!s.execute(check)) {
-				throw new IllegalArgumentException("No user exists under the provided information");
-			} else {
-				StringBuilder query = new StringBuilder("UPDATE users SET ");
-				query.append(firstName).append(", ").append(lastName).append(", ").append(email).append(", ")
-						.append(campus).append(") ");
-				query.append("WHERE uID =" + userId);
-				query.append(" RETURNING *;");
+			ResultSet rs = s.executeQuery(query.toString());
 
-				ResultSet rs = s.executeQuery(query.toString());
-
-				return userJsonTransformer(rs);
-			}
+			return userJsonTransformer(rs);
 		} catch (SQLException e) {
 			e.printStackTrace();
 			throw new IllegalArgumentException("Could not update user in the database: " + e.getMessage());
@@ -250,12 +222,12 @@ public class DAL {
 	}
 
 	/**
-	 * @param userId: the ID of the user who is creating the event
+	 * @param userId:      the ID of the user who is creating the event
 	 * @param description: the description of the event to be created
-	 * @param eventTime: the time the event will take place
-	 * @param posterUrl: the url for the poster corresponding to this event
-	 * @param name: the name of the event given by the user
-	 * @param location: the location of the event as given by the user
+	 * @param eventTime:   the time the event will take place
+	 * @param posterUrl:   the url for the poster corresponding to this event
+	 * @param name:        the name of the event given by the user
+	 * @param location:    the location of the event as given by the user
 	 * @return user: A JSON object representing the newly created event, it includes
 	 *         the eventId
 	 * 
@@ -276,33 +248,31 @@ public class DAL {
 		}
 
 		try (Statement s = c.createStatement()) {
+			StringBuilder query = new StringBuilder(
+					"INSERT INTO events (owner, eventTime, posterUrl, name, description, location, popularity, status) VALUES (");
+			query.append(userId).append(", '").append(eventTime).append("', '").append(posterUrl).append("', '")
+					.append(name).append("', '").append(description).append("', '").append(location).append("', ")
+					.append(0).append(", ").append("'active'").append(") RETURNING *;");
 
-			String check = "EXISTS (SELECT 1 FROM events WHERE uID = " + userId + " AND name = " + name + ");";
+			ResultSet rs = s.executeQuery(query.toString());
 
-			// if check returns true then throw error
-			if (s.execute(check)) {
-				throw new IllegalArgumentException("Cannot create duplicate event");
-			} else {
-				StringBuilder query = new StringBuilder(
-						"INSERT INTO events (owner, eventTime, posterUrl, name, description, location, popularity, status) VALUES (");
-				query.append(userId).append(", ").append(eventTime).append(", ").append(posterUrl).append(", ")
-						.append(name).append(", ").append(description).append(", ").append(location)
-						.append(") RETURNING *;");
+			JSONObject event = eventJsonTransformer(rs);
+			int eventId = (int) event.get("eID");
 
-				ResultSet rs = s.executeQuery(query.toString());
-				int eventId = rs.getInt(rs.getInt("eID"));
-
-				String tagInsert = "";
-				for (String tag : tags) {
-					tagInsert = "INSERT INTO tags (event, tag) VALUES (" + eventId + ", " + tag + ");";
-					s.addBatch(tagInsert);
-				}
-				s.executeBatch();
-
-				String tagsQuery = "SELECT DISTINCT tag FROM tags WHERE event = " + eventId + ";";
-
-				return eventJsonTransformer(rs, s.executeQuery(tagsQuery));
+			String tagInsert = "";
+			for (String tag : tags) {
+				tagInsert = "INSERT INTO tags (event, tag) VALUES (" + eventId + ", '" + tag + "');";
+				s.addBatch(tagInsert);
 			}
+			s.executeBatch();
+
+			String tagsQuery = "SELECT DISTINCT tag FROM tags WHERE event = " + eventId + ";";
+			ResultSet tagsRs = s.executeQuery(tagsQuery);
+			eventJsonAddTags(event, tagsRs);
+
+			rs.close();
+			tagsRs.close();
+			return event;
 		} catch (SQLException e) {
 			e.printStackTrace();
 			throw new IllegalArgumentException("Could not add event to the database: " + e.getMessage());
@@ -321,19 +291,15 @@ public class DAL {
 	 */
 	public JSONObject retrieveEvent(int eventId) {
 		try (Statement s = c.createStatement()) {
-			String check = "EXISTS (SELECT 1 FROM events WHERE eID = " + eventId + ");";
+			String eventQuery = "SELECT * FROM events WHERE eID = " + eventId + ";";
+			String tagsQuery = "SELECT DISTINCT tag FROM tags WHERE event = " + eventId + ";";
 
-			// if check returns false then throw error
-			if (!s.execute(check)) {
-				throw new IllegalArgumentException("No event exists under the provided information");
-			} else {
-				String eventQuery = "SELECT * FROM events WHERE eID = " + eventId + ";";
-				String tagsQuery = "SELECT DISTINCT tag FROM tags WHERE event = " + eventId + ";";
+			ResultSet eventRs = s.executeQuery(eventQuery);
+			JSONObject event = eventJsonTransformer(eventRs);
 
-				ResultSet eventRs = s.executeQuery(eventQuery);
-				ResultSet tagsRs = s.executeQuery(tagsQuery);
-				return eventJsonTransformer(eventRs, tagsRs);
-			}
+			ResultSet tagsRs = s.executeQuery(tagsQuery);
+			eventJsonAddTags(event, tagsRs);
+			return event;
 		} catch (SQLException e) {
 			e.printStackTrace();
 			throw new IllegalArgumentException("Could not load event from the database: " + e.getMessage());
@@ -342,7 +308,7 @@ public class DAL {
 
 	/**
 	 * @param eventId: the id of the event we want to delete
-	 * @param userId: the id of the user who intends to delete the event
+	 * @param userId:  the id of the user who intends to delete the event
 	 * @return nothing
 	 * 
 	 *         This method will delete an event from the database given that the
@@ -355,15 +321,16 @@ public class DAL {
 	 */
 	public void deleteEvent(int eventId, int userId) {
 		try (Statement s = c.createStatement()) {
-			String check = "EXISTS (SELECT 1 FROM events WHERE eID = " + eventId + " AND owner = " + userId + ");";
-
-			// if check returns false then throw error
-			if (!s.execute(check)) {
-				throw new IllegalArgumentException("No event exists under the provided information");
-			} else {
-				s.executeUpdate("DELETE FROM events WHERE eID = " + eventId + " AND owner = " + userId);
-				s.executeUpdate("DELETE FROM tags WHERE event = " + eventId);
+			String check = "SELECT * FROM events WHERE eID = " + eventId + ";";
+			ResultSet checkResult = s.executeQuery(check);
+			
+			if (!checkResult.next()) {
+				throw new NullPointerException("No event exists under the provided information");
 			}
+			
+			s.executeUpdate("DELETE FROM rsvps WHERE event = " + eventId);
+			s.executeUpdate("DELETE FROM tags WHERE event = " + eventId);
+			s.executeUpdate("DELETE FROM events WHERE eID = " + eventId + " AND owner = " + userId);
 		} catch (SQLException e) {
 			e.printStackTrace();
 			throw new IllegalArgumentException("Could not delete event from the database: " + e.getMessage());
@@ -371,12 +338,12 @@ public class DAL {
 	}
 
 	/**
-	 * @param eventId: the id of the event to be updated
-	 * @param userId: the user id of the user trying to update the event
+	 * @param eventId:     the id of the event to be updated
+	 * @param userId:      the user id of the user trying to update the event
 	 * @param description: the new description for the event
-	 * @param eventTime: the new time for the event
-	 * @param name: the new name for the event
-	 * @param location: the new location for the event
+	 * @param eventTime:   the new time for the event
+	 * @param name:        the new name for the event
+	 * @param location:    the new location for the event
 	 * @return user: A JSON object representing the newly updated event
 	 * 
 	 *         This method will update all the fields in the database for a specific
@@ -395,33 +362,27 @@ public class DAL {
 		}
 
 		try (Statement s = c.createStatement()) {
+			StringBuilder query = new StringBuilder("UPDATE events SET ");
+			query.append("eventTime = '" + eventTime).append("', name = '").append(name).append("', description = '")
+					.append(description).append("', location = '").append(location);
+			query.append("' WHERE eID =" + eventId).append(" AND owner = " + userId);
+			query.append(" RETURNING *;");
 
-			String check = "EXISTS (SELECT 1 FROM events WHERE eID = " + eventId + ");";
+			JSONObject event = eventJsonTransformer(s.executeQuery(query.toString()));
+		
+			// we cannot update the rows in the table, simply remove them and re-add them
+			s.executeUpdate("DELETE FROM tags WHERE event = " + eventId);
 
-			// if check returns false then throw error
-			if (!s.execute(check)) {
-				throw new IllegalArgumentException("Cannot find target event");
-			} else {
-				StringBuilder query = new StringBuilder("UPDATE users SET ");
-				query.append(eventTime).append(", ").append(name).append(", ").append(description).append(", ")
-						.append(location);
-				query.append("WHERE eID =" + userId).append(" AND owner = " + userId);
-				query.append(" RETURNING *;");
-
-				// we cannot update the rows in the table, simply remove them and re-add them
-				s.executeUpdate("DELETE FROM tags WHERE event = " + eventId);
-
-				String tagInsert = "";
-				for (String tag : tags) {
-					tagInsert = "INSERT INTO tags (event, tag) VALUES (" + eventId + ", " + tag + ");";
-					s.addBatch(tagInsert);
-				}
-				s.executeBatch();
-
-				String tagsQuery = "SELECT DISTINCT tag FROM tags WHERE event = " + eventId + ";";
-
-				return eventJsonTransformer(s.executeQuery(query.toString()), s.executeQuery(tagsQuery));
+			String tagInsert = "";
+			for (String tag : tags) {
+				tagInsert = "INSERT INTO tags (event, tag) VALUES (" + eventId + ", '" + tag + "');";
+				s.addBatch(tagInsert);
 			}
+			s.executeBatch();
+
+			String tagsQuery = "SELECT DISTINCT tag FROM tags WHERE event = " + eventId + ";";
+			eventJsonAddTags(event, s.executeQuery(tagsQuery));
+			return event;
 		} catch (SQLException e) {
 			e.printStackTrace();
 			throw new IllegalArgumentException("Could not update event in the database: " + e.getMessage());
@@ -430,8 +391,8 @@ public class DAL {
 
 	/**
 	 * @param fromTime: the date time to be used as a reference for inactivity
-	 * @param toTime: the date time to be used as a reference for the future
-	 * @param status: the new status for the events
+	 * @param toTime:   the date time to be used as a reference for the future
+	 * @param status:   the new status for the events
 	 * @return nothing
 	 * 
 	 *         This method will update all events that happened in the time interval
@@ -442,8 +403,8 @@ public class DAL {
 	 */
 	public void updateEventStatus(String status, Timestamp fromTime, Timestamp toTime) {
 		try (Statement s = c.createStatement()) {
-			String query = "UPDATE events SET status = " + status + " WHERE eventTime BETWEEN " + fromTime + " AND "
-					+ toTime + ";";
+			String query = "UPDATE events SET status = '" + status + "' WHERE eventTime BETWEEN '" + fromTime
+					+ "' AND '" + toTime + "';";
 			s.executeUpdate(query);
 		} catch (SQLException e) {
 			e.printStackTrace();
@@ -461,12 +422,8 @@ public class DAL {
 	 */
 	@SuppressWarnings("unchecked")
 	public JSONObject retrieveAllTags() {
-		Statement s = null;
-
-		try {
-			s = c.createStatement();
+		try (Statement s = c.createStatement()) {
 			ResultSet rs = s.executeQuery("SELECT DISTINCT tag FROM tags");
-			s.close();
 
 			JSONObject tags = new JSONObject();
 			JSONArray tagList = new JSONArray();
@@ -485,7 +442,7 @@ public class DAL {
 	}
 
 	/**
-	 * @param tags: list of tags to lookup by
+	 * @param tags:   list of tags to lookup by
 	 * @param status: status of the events in question
 	 * @return events: JSONObject of the list of events returned
 	 * 
@@ -493,19 +450,21 @@ public class DAL {
 	 *         that have the set tags, we can also request what status they will
 	 *         have. If no status is given, all the events with the set tags will be
 	 *         returned.
-	 * 
-	 *         Run the query: SELECT eID, uID, poster, name FROM events WHERE eID =
-	 *         (SELECT eID FROM tags WHERE tag IN tags) AND status = status
-	 *         Transform information into JSONObject and return
-	 * 
+	 *         
 	 *         Creating the JSON will be done through the eventListJsonTransformer
 	 *         method
 	 */
 	public JSONObject retrieveEventsByTag(Set<String> tags, String status) {
 		try (Statement s = c.createStatement()) {
-			StringBuilder query = new StringBuilder("SELECT eID, owner, posterUrl, name FROM events WHERE eID = ");
-			query.append("(SELECT eID FROM tags WHERE tag IN " + tags).append(")");
-
+			StringBuilder query = new StringBuilder("SELECT eID, owner, posterUrl, name FROM events WHERE eID IN ");
+			query.append("(SELECT event FROM tags WHERE tag IN ");
+			
+			StringJoiner sj = new StringJoiner(",", "(", ")");
+			for (String tag : tags) {
+				sj.add("'" + tag + "'");
+			}
+			query.append(sj.toString()).append(")");
+			
 			if (!status.isEmpty()) {
 				query.append(" AND status = " + status);
 			}
@@ -534,24 +493,17 @@ public class DAL {
 	 */
 	public JSONObject retrieveEventsByOwner(int userId, String status) {
 		try (Statement s = c.createStatement()) {
-			String check = "EXISTS (SELECT 1 FROM users WHERE uID = " + userId + ");";
+			StringBuilder query = new StringBuilder(
+					"SELECT eID, owner, posterUrl, name FROM events WHERE owner = " + userId);
 
-			// if check returns false then throw error
-			if (!s.execute(check)) {
-				throw new IllegalArgumentException("Cannot find the target user");
-			} else {
-				StringBuilder query = new StringBuilder(
-						"SELECT eID, owner, posterUrl, name FROM events WHERE owner = " + userId);
-
-				if (!status.isEmpty()) {
-					query.append(" AND status = " + status);
-				}
-
-				query.append(";");
-				ResultSet rs = s.executeQuery(query.toString());
-
-				return eventListJsonTransformer(rs);
+			if (!status.isEmpty()) {
+				query.append(" AND status = " + status);
 			}
+
+			query.append(";");
+			ResultSet rs = s.executeQuery(query.toString());
+
+			return eventListJsonTransformer(rs);
 		} catch (SQLException e) {
 			e.printStackTrace();
 			throw new NullPointerException("Could not retrieve events by owner from the database: " + e.getMessage());
@@ -575,7 +527,7 @@ public class DAL {
 
 		try (Statement s = c.createStatement()) {
 			StringBuilder query = new StringBuilder(
-					"SELECT eID, owner, posterUrl, name FROM events WHERE name ILIKE %" + search + "%");
+					"SELECT eID, owner, posterUrl, name FROM events WHERE name ILIKE '%" + search + "%'");
 
 			if (!status.isEmpty()) {
 				query.append(" AND status = " + status);
@@ -593,7 +545,7 @@ public class DAL {
 
 	/**
 	 * @param fromTime: the earliest time for the events in question
-	 * @param toTime: the latest time for the events in question
+	 * @param toTime:   the latest time for the events in question
 	 * @return events: JSONObject of the list of events returned
 	 * 
 	 *         This method will retrieve some basic information of all the events
@@ -609,8 +561,8 @@ public class DAL {
 	public JSONObject retrieveEventsByTime(Timestamp fromTime, Timestamp toTime) {
 
 		try (Statement s = c.createStatement()) {
-			String query = "SELECT eID, owner, posterUrl, name FROM events WHERE eventTime BETWEEN " + fromTime
-					+ " AND " + toTime + ";";
+			String query = "SELECT eID, owner, posterUrl, name FROM events WHERE eventTime BETWEEN '" + fromTime
+					+ "' AND '" + toTime + "';";
 			ResultSet rs = s.executeQuery(query);
 
 			return eventListJsonTransformer(rs);
@@ -626,25 +578,12 @@ public class DAL {
 	 * @return nothing
 	 * 
 	 *         This method permits the subcsription of one user to another by adding
-	 *         a row to the subscriptions table.
+	 *         a row to the subscribes table.
 	 */
 	public void subscribeTo(int followerId, int followedId) {
 		try (Statement s = c.createStatement()) {
-			String followedCheck = "EXISTS (SELECT 1 FROM users WHERE uID = " + followedId + ");";
-
-			if (!s.execute(followedCheck)) {
-				throw new IllegalArgumentException("User to be subscribed to does not exist");
-			}
-
-			String subscriptionCheck = "EXISTS (SELECT 1 FROM subscriptions WHERE followerID = " + followerId
-					+ " AND followedID = " + followedId + ");";
-
-			if (s.execute(subscriptionCheck)) {
-				throw new NullPointerException("Cannot subscribe to the same user twice");
-			}
-
-			String query = "INSERT INTO subscriptions (followerID, followedID) VALUES (" + followerId + ", "
-					+ followedId + ");";
+			String query = "INSERT INTO subscribes (followerID, followedID) VALUES (" + followerId + ", " + followedId
+					+ ");";
 			s.executeUpdate(query);
 		} catch (SQLException e) {
 			e.printStackTrace();
@@ -658,18 +597,18 @@ public class DAL {
 	 * @return nothing
 	 * 
 	 *         This method permits the un-subcsription of one user to another by
-	 *         deleting a row from the subscriptions table.
+	 *         deleting a row from the subscribes table.
 	 */
 	public void unsubscribeFrom(int followerId, int followedId) {
 		try (Statement s = c.createStatement()) {
-			String subscriptionCheck = "EXISTS (SELECT 1 FROM subscriptions WHERE followerID = " + followerId
-					+ " AND followedID = " + followedId + ");";
-
-			if (!s.execute(subscriptionCheck)) {
+			String check = "SELECT * FROM subscribes WHERE followerID = " + followerId + " AND followedID = " + followedId + ";";
+			ResultSet checkResult = s.executeQuery(check);
+			
+			if (!checkResult.next()) {
 				throw new NullPointerException("Cannot unsubscribe from unknown relationship");
 			}
-
-			String query = "DELETE FROM subscriptions WHERE followerID = " + followerId + "AND followedID " + followedId
+			
+			String query = "DELETE FROM subscribes WHERE followerID = " + followerId + " AND followedID = " + followedId
 					+ ";";
 			s.executeUpdate(query);
 		} catch (SQLException e) {
@@ -679,7 +618,7 @@ public class DAL {
 	}
 
 	/**
-	 * @param userId: the ID of the user who wants to get their subscriptions
+	 * @param userId: the ID of the user who wants to get their subscribes
 	 * @return users: JSONObject containing the list of users
 	 * 
 	 *         This method retrieves some basic information from all the users the
@@ -691,7 +630,7 @@ public class DAL {
 	public JSONObject retrieveSubscriptions(int userId) {
 		try (Statement s = c.createStatement()) {
 			StringBuilder query = new StringBuilder("SELECT uID, firstName, lastName FROM users WHERE uID = ");
-			query.append("(SELECT followedID FROM subscriptions WHERE followerID = ").append(userId).append(");");
+			query.append("(SELECT followedID FROM subscribes WHERE followerID = ").append(userId).append(");");
 
 			return userListJsonTransformer(s.executeQuery(query.toString()));
 		} catch (SQLException e) {
@@ -713,7 +652,7 @@ public class DAL {
 	public JSONObject retrieveSubscribers(int userId) {
 		try (Statement s = c.createStatement()) {
 			StringBuilder query = new StringBuilder("SELECT uID, firstName, lastName FROM users WHERE uID = ");
-			query.append("(SELECT followerID FROM subscriptions WHERE followedID = ").append(userId).append(");");
+			query.append("(SELECT followerID FROM subscribes WHERE followedID = ").append(userId).append(");");
 
 			return userListJsonTransformer(s.executeQuery(query.toString()));
 		} catch (SQLException e) {
@@ -723,10 +662,10 @@ public class DAL {
 	}
 
 	/**
-	 * @param email: the email of the user who will rsvp
-	 * @param name: the name of the user who will rsvp
+	 * @param email:   the email of the user who will rsvp
+	 * @param name:    the name of the user who will rsvp
 	 * @param eventId: the id of the event to be rsvpd to
-	 * @param time: the current date time
+	 * @param time:    the current date time
 	 * @return nothing
 	 * 
 	 *         This method permits RSVP to one event by adding a row to the rsvps
@@ -738,16 +677,10 @@ public class DAL {
 		}
 
 		try (Statement s = c.createStatement()) {
-			String check = "EXISTS (SELECT 1 FROM rsvps WHERE email = " + email + " AND eID = " + eventId + ");";
+			String query = "INSERT INTO rsvps (email, name, event, signupTime) VALUES ('" + email + "', '" + name + "', "
+					+ eventId + ", '" + time + "');";
 
-			if (s.execute(check)) {
-				throw new NullPointerException("Cannot RSVP to the same event twice");
-			} else {
-				String query = "INSERT INTO rsvps (email, name, eID, time) VALUES (" + email + ", " + name + ", "
-						+ eventId + ", " + time + ");";
-
-				s.executeUpdate(query);
-			}
+			s.executeUpdate(query);
 		} catch (SQLException e) {
 			e.printStackTrace();
 			throw new NullPointerException("Could not rsvp to event: " + e.getMessage());
@@ -755,7 +688,7 @@ public class DAL {
 	}
 
 	/**
-	 * @param email: the email of the user who will un-rsvp
+	 * @param email:   the email of the user who will un-rsvp
 	 * @param eventId: the id of the event to be un-rsvpd to
 	 * @return nothing
 	 * 
@@ -768,14 +701,17 @@ public class DAL {
 		}
 
 		try (Statement s = c.createStatement()) {
-			String check = "EXISTS (SELECT 1 FROM rsvps WHERE email = " + email + " AND eID = " + eventId + ");";
-
-			if (!s.execute(check)) {
+			
+			String check = "SELECT * FROM rsvps WHERE email = '" + email + "' AND event = " + eventId + ";";
+			ResultSet checkResult = s.executeQuery(check);
+			
+			if (!checkResult.next()) {
 				throw new NullPointerException("User is not RSVPd to this event");
-			} else {
-				String query = "DELETE FROM rsvps WHERE email = " + email + " AND eID = " + eventId;
-				s.executeUpdate(query);
 			}
+			
+			
+			String query = "DELETE FROM rsvps WHERE email = '" + email + "' AND event = " + eventId + ";";
+			s.executeUpdate(query);
 		} catch (SQLException e) {
 			e.printStackTrace();
 			throw new NullPointerException("Could not rsvp to event: " + e.getMessage());
@@ -797,8 +733,8 @@ public class DAL {
 	public JSONObject retrieveRsvpdEvents(String email, String status) {
 
 		try (Statement s = c.createStatement()) {
-			StringBuilder query = new StringBuilder("SELECT eID, owner, posterUrl, name FROM events WHERE eID = ");
-			query.append("(SELECT eID FROM rsvps WHERE email = " + email + ")");
+			StringBuilder query = new StringBuilder("SELECT eID, owner, posterUrl, name FROM events WHERE eID IN ");
+			query.append("(SELECT event FROM rsvps WHERE email = '" + email + "')");
 			if (!status.isEmpty()) {
 				query.append(" AND status = " + status);
 			}
@@ -828,8 +764,8 @@ public class DAL {
 	 */
 	public JSONObject retrieveAttendees(int eventId) {
 		try (Statement s = c.createStatement()) {
-			StringBuilder query = new StringBuilder("SELECT uID, firstName, lastName FROM users WHERE email = ");
-			query.append("(SELECT email FROM rsvps WHERE eID = " + eventId + ");");
+			StringBuilder query = new StringBuilder("SELECT uID, firstName, lastName FROM users WHERE email IN ");
+			query.append("(SELECT email FROM rsvps WHERE event = " + eventId + ");");
 			ResultSet rs = s.executeQuery(query.toString());
 
 			return userListJsonTransformer(rs);
@@ -853,11 +789,17 @@ public class DAL {
 	@SuppressWarnings("unchecked")
 	private JSONObject userJsonTransformer(ResultSet rs) throws SQLException {
 		JSONObject user = new JSONObject();
-		user.put("uID", rs.getInt("uID"));
-		user.put("firstName", rs.getString("firstName"));
-		user.put("lastName", rs.getString("firstName"));
-		user.put("email", rs.getString("email"));
-		user.put("campus", rs.getString("campus"));
+
+		if (rs.next()) {
+			user.put("uID", rs.getInt("uID"));
+			user.put("firstName", rs.getString("firstName"));
+			user.put("lastName", rs.getString("lastName"));
+			user.put("email", rs.getString("email"));
+			user.put("campus", rs.getString("campus"));
+		} else {
+			rs.close();
+			throw new NullPointerException("User was not found in the database");
+		}
 
 		rs.close();
 		return user;
@@ -874,27 +816,35 @@ public class DAL {
 	 *         "things happen", ... }
 	 */
 	@SuppressWarnings("unchecked")
-	private JSONObject eventJsonTransformer(ResultSet eventRs, ResultSet tagsRs) throws SQLException {
-		JSONObject event = new JSONObject();
-		event.put("eID", eventRs.getInt("eID"));
-		event.put("owner", eventRs.getInt("owner"));
-		event.put("eventTime", eventRs.getTimestamp("eventTime"));
-		event.put("posterUrl", eventRs.getString("posterUrl"));
-		event.put("name", eventRs.getString("name"));
-		event.put("description", eventRs.getString("description"));
-		event.put("location", eventRs.getString("location"));
-		event.put("popularity", eventRs.getInt("popularity"));
-		event.put("status", eventRs.getString("status"));
+	private JSONObject eventJsonTransformer(ResultSet eventRs) throws SQLException {
+		if (eventRs.next()) {
+			JSONObject event = new JSONObject();
 
+			event.put("eID", eventRs.getInt("eID"));
+			event.put("owner", eventRs.getInt("owner"));
+			event.put("eventTime", eventRs.getTimestamp("eventTime"));
+			event.put("posterUrl", eventRs.getString("posterUrl"));
+			event.put("name", eventRs.getString("name"));
+			event.put("description", eventRs.getString("description"));
+			event.put("location", eventRs.getString("location"));
+			event.put("popularity", eventRs.getInt("popularity"));
+			event.put("status", eventRs.getString("status"));
+			
+			eventRs.close();
+			return event;
+		} else {
+			eventRs.close();
+			throw new NullPointerException("Event was not found in the database");
+		}
+	}
+
+	@SuppressWarnings("unchecked")
+	private void eventJsonAddTags(JSONObject event, ResultSet tagsRs) throws SQLException {
 		JSONArray tags = new JSONArray();
 		while (tagsRs.next()) {
 			tags.add(tagsRs.getString("tag"));
 		}
 		event.put("tags", tags);
-
-		eventRs.close();
-		tagsRs.close();
-		return event;
 	}
 
 	/**
@@ -916,7 +866,7 @@ public class DAL {
 			JSONObject user = new JSONObject();
 			user.put("uID", rs.getInt("uID"));
 			user.put("firstName", rs.getString("firstName"));
-			user.put("lastName", rs.getString("firstName"));
+			user.put("lastName", rs.getString("lastName"));
 
 			userList.add(user);
 		}
