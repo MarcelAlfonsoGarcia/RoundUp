@@ -171,9 +171,14 @@ public class DAL {
 			if (!checkResult.next()) {
 				throw new NullPointerException("No user exists under the provided information");
 			}
+						
+			String events = "SELECT eID FROM events WHERE owner = " + userId + ";";
+			ResultSet eventsResult = s.executeQuery(events);
+			while (eventsResult.next()) {
+				this.deleteEvent(eventsResult.getInt("eID"), userId);
+			}
 			
 			s.executeUpdate("DELETE FROM subscribes WHERE followerID = " + userId + " OR followedID = " + userId + ";");
-			s.executeUpdate("DELETE FROM events WHERE owner = " + userId + ";");
 			s.executeUpdate("DELETE FROM users WHERE uID = " + userId + ";");
 		} catch (SQLException e) {
 			e.printStackTrace();

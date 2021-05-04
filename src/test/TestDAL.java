@@ -461,11 +461,15 @@ public class TestDAL {
 	@Test
 	@Order(22)
 	public void testUpdateEventStatus() {
-		//TODO: check status change
 		dal.updateEventStatus("inactive", Timestamp.valueOf("2022-04-03 14:55:10.888"),
 				Timestamp.valueOf("2022-04-05 14:55:10.888"));
+		JSONObject temp = dal.retrieveEvent(eventOneId);
+		assertEquals("inactive", (String) temp.get("status"));
+		
 		dal.updateEventStatus("active", Timestamp.valueOf("2022-04-03 14:55:10.888"),
 				Timestamp.valueOf("2022-04-05 14:55:10.888"));
+		temp = dal.retrieveEvent(eventOneId);
+		assertEquals("active", (String) temp.get("status"));
 	}
 
 	@Test
