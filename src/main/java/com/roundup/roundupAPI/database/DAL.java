@@ -4,16 +4,18 @@
 	It will follow a Singleton design pattern that exposes its methods to other classes.
 	Each public method will describe a query that will be customizable through the
 	passed parameters.
+	
+	@author Marcel Alfonso
 */
-package database;
+package com.roundup.roundupAPI.database;
 
+import java.net.URI;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.sql.Timestamp;
-import java.util.Iterator;
 import java.util.Set;
 import java.util.StringJoiner;
 
@@ -40,7 +42,7 @@ public class DAL {
 		try {
 //			String dbUrls = "postgres://kproipogvexbbm:2810f0e0743eb39b9b84189023ffbd36f43f7156827da2ba984fca64633236be@ec2-54-161-239-198.compute-1.amazonaws.com:5432/d57evff6a32s3o";
 //			URI dbUri = new URI(dbUrls);
-//			
+			
 //		    String username = dbUri.getUserInfo().split(":")[0];
 //		    String password = dbUri.getUserInfo().split(":")[1];
 //		    String dbUrl = "jdbc:postgresql://" + dbUri.getHost() + ':' + dbUri.getPort() + dbUri.getPath();

@@ -1,3 +1,8 @@
+/**
+ * @author Marcel Alfonso
+ */
+package com.roundup.roundupAPI.database;
+
 import static org.junit.jupiter.api.Assertions.*;
 
 import java.sql.Timestamp;
@@ -14,8 +19,6 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.MethodOrderer;
 import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.TestMethodOrder;
-
-import database.DAL;
 
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 public class TestDAL {
@@ -833,3 +836,4 @@ public class TestDAL {
 		return equals;
 	}
 }
+
