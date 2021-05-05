@@ -30,8 +30,8 @@ public class DAL {
 	private static DAL instance;
 	private static Connection c;
 
-	@Value("${spring.datasource.url}")
-	private String dbUrl;
+//	@Value("${spring.datasource.url}")
+//	private String dbUrl;
 
 	/**
 	 * @param none
@@ -45,8 +45,7 @@ public class DAL {
 	 */
 	private DAL() {
 		try {
-			// String dbUrl =
-			// "jdbc:postgresql://ec2-54-161-239-198.compute-1.amazonaws.com:5432/d57evff6a32s3o?password=2810f0e0743eb39b9b84189023ffbd36f43f7156827da2ba984fca64633236be&sslmode=require&user=kproipogvexbbm";
+			String dbUrl =  "jdbc:postgresql://ec2-54-161-239-198.compute-1.amazonaws.com:5432/d57evff6a32s3o?password=2810f0e0743eb39b9b84189023ffbd36f43f7156827da2ba984fca64633236be&sslmode=require&user=kproipogvexbbm";
 			Class.forName("org.postgresql.Driver");
 			c = DriverManager.getConnection(dbUrl);
 		} catch (Exception e) {
