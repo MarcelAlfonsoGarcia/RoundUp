@@ -1,1 +1,1 @@
-web: java com.roundup.roundupAPI.RoundupApiApplication.Main
+web: java -app com.roundup.roundupAPI.RoundupApiApplication.Main
