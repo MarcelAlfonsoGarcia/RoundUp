@@ -22,7 +22,7 @@ import com.roundup.roundupAPI.services.EventService;
  * as a response.
  */
 @RestController
-@ComponentScan("com.roundup.roundupAPI.services")
+@ComponentScan("com.roundup.roundupAPI.services.EventService")
 @RequestMapping(value = "api/events")
 public class EventController {
 	/*

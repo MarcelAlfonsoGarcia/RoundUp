@@ -4,6 +4,7 @@ import java.sql.Timestamp;
 import java.util.Set;
 
 import org.json.simple.JSONObject;
+import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Service;
 
 import com.roundup.roundupAPI.database.DAL;
