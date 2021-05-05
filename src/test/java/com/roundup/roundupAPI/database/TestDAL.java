@@ -322,6 +322,9 @@ public class TestDAL {
 		event.put("eID", eventOneId);
 		event.put("owner", userOneId);
 		event.put("name", EVENT_ONE_NAME);
+		event.put("location", EVENT_ONE_LOCATION);
+		event.put("eventTime", EVENT_ONE_TIME);
+		event.put("description", EVENT_ONE_DESCRIPTION);
 		event.put("posterUrl", EVENT_ONE_POSTER_URL);
 		eventResults.add(event);
 		eventSearchResult.put("events", eventResults);

@@ -4,9 +4,11 @@ import org.json.simple.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
+
 import com.roundup.roundupAPI.services.UserService; 
 
 @RestController
@@ -55,7 +57,31 @@ public class UserController {
 		return userService.login(email, password);
 	  };
 	
-	  
+		 /*
+      @param email: the email of the new user
+      @param password: the password of the new user
+
+      @return: a json object with information about the newly added user
+
+      This method handles requests with the /users/login route as attempts to log in the user
+      and tries to check if the provided credentials are correct.
+    */
+    @RequestMapping(method=RequestMethod.GET, value="api/users/")
+    public JSONObject loadUser(@RequestHeader("Authorization") String authHeader) {
+    /*
+      1. Get UserService instance to check user credentials.
+      2. If successful, retrieve user information and token
+      3. Return JSON serialized User object and token
+    */
+        try {
+                String token = authHeader.split(" ")[1];
+                return userService.loadUser(token);
+        } catch (Exception e) {
+                e.printStackTrace();
+                return null;
+        }
+      };
+      
 	/*
 	  @param uID: the user's id
 	

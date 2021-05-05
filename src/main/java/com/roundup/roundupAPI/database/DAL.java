@@ -464,7 +464,7 @@ public class DAL {
 	 */
 	public JSONObject retrieveEventsByTag(Set<String> tags, String status) {
 		try (Statement s = c.createStatement()) {
-			StringBuilder query = new StringBuilder("SELECT eID, owner, posterUrl, name FROM events WHERE eID IN ");
+			StringBuilder query = new StringBuilder("SELECT eID, owner, posterUrl, name, eventTime, location, description FROM events WHERE eID IN ");
 			query.append("(SELECT event FROM tags WHERE tag IN ");
 			
 			StringJoiner sj = new StringJoiner(",", "(", ")");
@@ -502,7 +502,7 @@ public class DAL {
 	public JSONObject retrieveEventsByOwner(int userId, String status) {
 		try (Statement s = c.createStatement()) {
 			StringBuilder query = new StringBuilder(
-					"SELECT eID, owner, posterUrl, name FROM events WHERE owner = " + userId);
+					"SELECT eID, owner, posterUrl, name, eventTime, location, description FROM events WHERE owner = " + userId);
 
 			if (!status.isEmpty()) {
 				query.append(" AND status = " + status);
@@ -535,7 +535,7 @@ public class DAL {
 
 		try (Statement s = c.createStatement()) {
 			StringBuilder query = new StringBuilder(
-					"SELECT eID, owner, posterUrl, name FROM events WHERE name ILIKE '%" + search + "%'");
+					"SELECT eID, owner, posterUrl, name, eventTime, location, description FROM events WHERE name ILIKE '%" + search + "%'");
 
 			if (!status.isEmpty()) {
 				query.append(" AND status = " + status);
@@ -569,7 +569,7 @@ public class DAL {
 	public JSONObject retrieveEventsByTime(Timestamp fromTime, Timestamp toTime) {
 
 		try (Statement s = c.createStatement()) {
-			String query = "SELECT eID, owner, posterUrl, name FROM events WHERE eventTime BETWEEN '" + fromTime
+			String query = "SELECT eID, owner, posterUrl, name, eventTime, location, description FROM events WHERE eventTime BETWEEN '" + fromTime
 					+ "' AND '" + toTime + "';";
 			ResultSet rs = s.executeQuery(query);
 
@@ -905,6 +905,9 @@ public class DAL {
 			event.put("eID", rs.getInt("eID"));
 			event.put("owner", rs.getInt("owner"));
 			event.put("name", rs.getString("name"));
+			event.put("eventTime", rs.getString("eventTime"));
+			event.put("location", rs.getString("location"));
+			event.put("description", rs.getString("description"));
 			event.put("posterUrl", rs.getString("posterUrl"));
 
 			eventList.add(event);

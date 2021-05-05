@@ -4,6 +4,7 @@ import java.sql.Timestamp;
 import java.util.Set;
 
 import org.json.simple.JSONObject;
+import org.springframework.stereotype.Service;
 
 import com.roundup.roundupAPI.database.DAL;
 
@@ -12,7 +13,10 @@ import com.roundup.roundupAPI.database.DAL;
 This class calls the data access layer and performs the desired operations to
 retrieve event information from the database.
 */
+@Service
 public class EventService {
+	
+	private DAL dal = DAL.getInstance();
 	/**
 	  @param userId: the ID of the user who is creating the event
 	  @param description: the description of the event to be created
@@ -32,7 +36,7 @@ public class EventService {
 	    2. Create an event object with the provided event information.
 	    3. Return the event object.
 	  */
-		return DAL.getInstance().createEvent(userID, eventTime, poster, name, description, location, tags);
+		return dal.createEvent(userID, eventTime, poster, name, description, location, tags);
 	}
 	
 	/**
@@ -47,7 +51,7 @@ public class EventService {
 	    2. Create an event object with the retrieved information.
 	    3. Return the event object.
 	  */
-		return DAL.getInstance().retrieveEvent(eventID);
+		return dal.retrieveEvent(eventID);
 	}
 	
 	/**
@@ -69,7 +73,7 @@ public class EventService {
 	    2. Create an event object with the provided event information.
 	    3. Return the event object.
 	  */
-		return DAL.getInstance().updateEvent(eventID, userId, description, eventTime, name, location, tags);
+		return dal.updateEvent(eventID, userId, description, eventTime, name, location, tags);
 	}
 	
 	/**
@@ -86,7 +90,7 @@ public class EventService {
 	    2. Create an event object with the provided event information.
 	    3. Return the Event object.
 	  */
-		DAL.getInstance().deleteEvent(eventID, userID);
+		dal.deleteEvent(eventID, userID);
 	}
 	
 	/**
@@ -94,7 +98,7 @@ public class EventService {
 	 * 
 	 */
 	public JSONObject getAllTags() {
-		return DAL.getInstance().retrieveAllTags();
+		return dal.retrieveAllTags();
 	}
 	
 	/**
@@ -111,7 +115,7 @@ public class EventService {
 	    2. Create Event objects with the given information.
 	    3. Return the list of Event objects.
 	  */
-		return DAL.getInstance().retrieveEventsByTag(tags, status);
+		return dal.retrieveEventsByTag(tags, status);
 	}
 	
 	/**
@@ -124,7 +128,7 @@ public class EventService {
 	*/
 	public JSONObject getEventsByOwner(int userId, String status) {
 
-		return DAL.getInstance().retrieveEventsByOwner(userId, status);
+		return dal.retrieveEventsByOwner(userId, status);
 	}
 	
 	/**
@@ -137,7 +141,7 @@ public class EventService {
 	*/
 	public JSONObject getEventsByName(String search, String status) {
 
-		return DAL.getInstance().retrieveEventsByName(search, status);
+		return dal.retrieveEventsByName(search, status);
 	}
 
 	/**
@@ -150,7 +154,7 @@ public class EventService {
 	*/
 	public JSONObject getEventsByTime(Timestamp fromTime, Timestamp toTime) {
 
-		return DAL.getInstance().retrieveEventsByTime(fromTime, toTime);
+		return dal.retrieveEventsByTime(fromTime, toTime);
 	}
 	
 	/**
@@ -167,7 +171,7 @@ public class EventService {
 	    them to a list.
 	    4. Return the list of User objects.
 	  */
-		return DAL.getInstance().retrieveAttendees(eventID);
+		return dal.retrieveAttendees(eventID);
 	};
 
 }

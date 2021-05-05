@@ -1,6 +1,7 @@
 package com.roundup.roundupAPI.services;
 
 import org.json.simple.JSONObject;
+import org.springframework.stereotype.Service;
 
 import com.roundup.roundupAPI.database.DAL;
 
@@ -10,7 +11,10 @@ import java.util.Base64;
 This class calls the data access layer and performs the desired operations to
 retrieve user information from the database.
 */
+@Service
 public class UserService {
+	private DAL dal = DAL.getInstance();
+	
 	/**
 	 * @param firstName: the first name of the new user
 	 * @param lastName:  the last name of the new user
@@ -30,7 +34,7 @@ public class UserService {
 		 * Return newly created User object.
 		 * 
 		 */
-		return DAL.getInstance().createUser(firstName, lastName, email, password, campus);
+		return dal.createUser(firstName, lastName, email, password, campus);
 	};
 
 	/**
@@ -47,9 +51,53 @@ public class UserService {
 		 * information. 2. If user exists, create an authentication token and return it
 		 * to the user 3. Return authentication token
 		 */
-
-		return DAL.getInstance().logInUser(email, password);
+		 try {
+			 JSONObject userInfo = dal.logInUser(email, password);
+			 
+			 String auth = email + ":" + password;
+			 String token = Base64.getEncoder().encodeToString(auth.getBytes());
+			 userInfo.put("token", token);
+			 System.out.println(userInfo);
+			 return userInfo;
+		 } catch (Exception e) {
+			 e.printStackTrace();
+			 return null;
+		}
 	};
+	
+
+    /**
+	@param email: the email of the user
+	@param password: the password of the user
+	
+	@return the user's authentication token
+	
+	This method logs in the user.
+	    */
+    public JSONObject loadUser(String token) {
+		/*
+		  1. Query data acess layer to check if there's a user with the provided user information.
+		  2. If user exists, create an authentication token and return it to the user
+		  3. Return authentication token
+		*/
+	     String decodedToken = new String(Base64.getDecoder().decode(token));
+	     String[] authInfo = decodedToken.split(":");
+	     String email = "";
+	     String password = "";
+	     if (authInfo.length > 2) {
+		   email = authInfo[0];
+		   for (int i=1; i < authInfo.length; i++ ) {
+		       password += authInfo[i];
+		       if (i < authInfo.length - 1) password += ":";
+		   }
+		     } else {
+		   email = authInfo[0];
+		   password = authInfo[1];
+		   }
+
+	      return login(email, password);
+	    };
+
 
 	/**
 	 * @param token: an authentication token
@@ -58,7 +106,7 @@ public class UserService {
 	 * 
 	 *         This method authenticates in the user.
 	 */
-	public JSONObject authenticate(String token) {
+	public boolean authenticate(String token) {
 		/*
 		 * 1. QUery data access leyer to check if there's a valid unexpired
 		 * authentication token for the user. 2. If the authentication token, retrieve
@@ -80,7 +128,7 @@ public class UserService {
 			password = authInfo[1];
 		}
 
-		return login(email, password);
+		return login(email, password) != null;
 	};
 
 	/**
@@ -95,7 +143,7 @@ public class UserService {
 		 * entry. 2. If successful, retrieves the user information to create a new User
 		 * object. 3. Return newly created User object.
 		 */
-		return DAL.getInstance().retrieveUser(userID);
+		return dal.retrieveUser(userID);
 	};
 
 	/**
@@ -110,7 +158,7 @@ public class UserService {
 		 * retrieves the user information to create a new User object. 3. Return newly
 		 * created User object.
 		 */
-		DAL.getInstance().deleteUser(userID);
+		dal.deleteUser(userID);
 	};
 
 	/**
@@ -131,7 +179,7 @@ public class UserService {
 		 * user information. 2. If successful, retrieves the user information to create
 		 * a new User object. 3. Return newly created User object.
 		 */
-		return DAL.getInstance().updateUser(userID, firstName, lastName, email, campus);
+		return dal.updateUser(userID, firstName, lastName, email, campus);
 	};
 
 	/**
@@ -148,7 +196,7 @@ public class UserService {
 		 * creates an object with each of them, and adds them to a list. 3. Return the
 		 * list of RSVP objects.
 		 */
-		return DAL.getInstance().retrieveRsvpdEvents(email, status);
+		return dal.retrieveRsvpdEvents(email, status);
 	};
 
 	/**
@@ -164,7 +212,7 @@ public class UserService {
 		 * list of rsvps and creates an object with each of them, and adds them to a
 		 * list. 3. Return the list of RSVP objects.
 		 */
-		return DAL.getInstance().retrieveSubscriptions(userID);
+		return dal.retrieveSubscriptions(userID);
 	};
 
 	/**
@@ -182,6 +230,6 @@ public class UserService {
 		 * retrieves the list of users and creates an object with each of them, and adds
 		 * them to a list. 3. Return the list of Subscription objects.
 		 */
-		return DAL.getInstance().retrieveSubscribers(followedID);
+		return dal.retrieveSubscribers(followedID);
 	};
 }

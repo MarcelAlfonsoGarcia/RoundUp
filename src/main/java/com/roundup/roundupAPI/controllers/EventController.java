@@ -1,7 +1,9 @@
 package com.roundup.roundupAPI.controllers;
 
 import java.sql.Timestamp;
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Set;
 
@@ -11,6 +13,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.roundup.roundupAPI.services.EventService;
@@ -69,7 +72,7 @@ public class EventController {
 	  This method handles GET requests with the /events/eventID route as attempts to
 	  retrieve event information and accesses the DAL to do that.
 	*/
-	@RequestMapping(method=RequestMethod.GET, value="api/events/{eID}")
+	@RequestMapping(method=RequestMethod.GET, value="api/events/{eID}/")
 	public JSONObject getEvent(@PathVariable("eID") int eID) {
 	  /*
 	    1. Get EventService instance to retrieve event information.
@@ -140,7 +143,7 @@ public class EventController {
 		 * This method handles GET requests with the /events/tags route as
 		 * attempts to retrieve information on event tags
 		 */
-		@RequestMapping(method=RequestMethod.GET, value="api/tags")
+		@RequestMapping(method=RequestMethod.GET, value="api/tags/")
 		public JSONObject getAllTags() {
 			return eventService.getAllTags();
 		}
@@ -154,10 +157,14 @@ public class EventController {
 		 * This method handles GET requests with the /events/ route as
 		 * attempts to retrieve information on events according to tags
 		 */
-		@RequestMapping(method=RequestMethod.GET, value="api/events/tags")
-		public JSONObject getEventsByTag(@RequestBody JSONObject body) {
-			String status = (String) body.get("status");
-			List<String> tagList = (List<String>) body.get("tags");
+		@RequestMapping(method=RequestMethod.GET, value="api/events/tags/")
+		public JSONObject getEventsByTag(@RequestParam LinkedHashMap params) {
+			List<String> tagList = new ArrayList<>();
+			String[] tagsArray = ((String) params.get("tags")).split(",");
+			for (int i=0; i<tagsArray.length; i++) {
+			        tagList.add(tagsArray[i]);
+			}
+			String status = (String) params.get("status");
 			Set<String> tags = new HashSet<String>(tagList);
 			return eventService.getEventsByTag(tags, status);
 		}
@@ -171,9 +178,9 @@ public class EventController {
 		 * This method handles GET requests with the /events/userID route as
 		 * attempts to retrieve information on events according to the owner
 		 */
-		@RequestMapping(method=RequestMethod.GET, value="api/events/{uID}")
-		public JSONObject getEventsByOwner(@PathVariable ("uID") int uID, @RequestBody JSONObject body) {
-			String status = (String) body.get("status");
+		@RequestMapping(method=RequestMethod.GET, value="api/events/owner/{uID}/")
+		public JSONObject getEventsByOwner(@PathVariable ("uID") int uID, @RequestParam LinkedHashMap params) {
+			String status = (String) params.get("status");
 			return eventService.getEventsByOwner(uID, status);
 		}
 		
@@ -186,10 +193,10 @@ public class EventController {
 		 * This method handles GET requests with the /events/userID route as
 		 * attempts to retrieve information on events according to the specified search
 		 */
-		@RequestMapping(method=RequestMethod.GET, value="api/events/search")
-		public JSONObject getEventsByName(@RequestBody JSONObject body) {
-			String search = (String) body.get("search");
-			String status = (String) body.get("status");
+		@RequestMapping(method=RequestMethod.GET, value="api/events/search/")
+		public JSONObject getEventsByName(@RequestParam LinkedHashMap params) {
+			String search = (String) params.get("search");
+			String status = (String) params.get("status");
 			return eventService.getEventsByName(search, status);
 		}
 		
@@ -202,10 +209,10 @@ public class EventController {
 		 * This method handles GET requests with the /events/ route as
 		 * attempts to retrieve information on events according to the timeframe
 		 */
-		@RequestMapping(method=RequestMethod.GET, value="api/events/timeframe")
-		public JSONObject getEventsByTime(@RequestBody JSONObject body) {
-			Timestamp fromTime = Timestamp.valueOf((String) body.get("fromTime"));
-			Timestamp toTime = Timestamp.valueOf((String) body.get("toTime"));
+		@RequestMapping(method=RequestMethod.GET, value="api/events/timeframe/")
+		public JSONObject getEventsByTime(@RequestParam LinkedHashMap params) {
+			Timestamp fromTime = Timestamp.valueOf((String) params.get("fromTime"));
+			Timestamp toTime = Timestamp.valueOf((String) params.get("toTime"));
 
 			return eventService.getEventsByTime(fromTime, toTime);
 		}
