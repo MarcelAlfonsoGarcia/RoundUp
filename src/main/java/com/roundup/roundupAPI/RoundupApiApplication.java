@@ -8,7 +8,7 @@ import org.springframework.web.bind.annotation.ResponseBody;
 @SpringBootApplication
 public class RoundupApiApplication {
 
-    @RequestMapping("/")
+    @RequestMapping("/test/")
     @ResponseBody
     String home() {
       return "Hello World!";

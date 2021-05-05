@@ -1,1 +1,1 @@
-web: java -app com.roundup.roundupAPI.RoundupApiApplication.Main
+web: java -jar target/RoundUp-0.0.1-SNAPSHOT.jar
