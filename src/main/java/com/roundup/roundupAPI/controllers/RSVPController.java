@@ -44,9 +44,8 @@ public class RSVPController {
 		String email = (String) body.get("email");
 		String name = (String) body.get("name");
 		int eID = (int) body.get("eID");
-		Timestamp time = (Timestamp) body.get("time");
 		
-		rsvpService.addRsvp(email, name, eID, time);
+		rsvpService.addRsvp(email, name, eID);
 	};
 	
 	
