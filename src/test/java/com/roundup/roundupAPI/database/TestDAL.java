@@ -45,7 +45,8 @@ public class TestDAL {
 	private static final String EVENT_ONE_LOCATION = "Estella";
 	private static final int EVENT_ONE_POPULARITY = 0;
 	private static final String EVENT_ONE_STATUS = "active";
-	private static final Set<String> EVENT_ONE_TAGS = new HashSet<String>(Arrays.asList("Mathematics", "Colloquium", "test"));
+	private static final Set<String> EVENT_ONE_TAGS = new HashSet<String>(
+			Arrays.asList("Mathematics", "Colloquium", "test"));
 
 	private static int eventTwoId;
 	private static final Timestamp EVENT_TWO_TIME = Timestamp.valueOf("2023-04-04 14:55:15.888");
@@ -102,7 +103,7 @@ public class TestDAL {
 				USER_TWO_PASSWORD, USER_TWO_CAMPUS);
 		assertTrue(compareUsers(userOne, userOneDb));
 		assertTrue(compareUsers(userTwo, userTwoDb));
-		
+
 		userOneId = (int) userOneDb.get("uID");
 		userTwoId = (int) userTwoDb.get("uID");
 
@@ -230,7 +231,7 @@ public class TestDAL {
 			dal.retrieveUser(userOneId);
 		});
 		assertEquals("User was not found in the database", e.getMessage());
-		
+
 		dal.deleteUser(userTwoId);
 		e = assertThrows(NullPointerException.class, () -> {
 			dal.retrieveUser(userTwoId);
@@ -309,13 +310,13 @@ public class TestDAL {
 	@Test
 	@Order(14)
 	public void createValidEvent() {
-		JSONObject eventOneDb = dal.createEvent(userOneId, EVENT_ONE_TIME, EVENT_ONE_POSTER_URL,
-				EVENT_ONE_NAME, EVENT_ONE_DESCRIPTION, EVENT_ONE_LOCATION, EVENT_ONE_TAGS);
-		JSONObject eventTwoDb = dal.createEvent(userTwoId, EVENT_TWO_TIME, EVENT_TWO_POSTER_URL,
-				EVENT_TWO_NAME, EVENT_TWO_DESCRIPTION, EVENT_TWO_LOCATION, EVENT_TWO_TAGS);
+		JSONObject eventOneDb = dal.createEvent(userOneId, EVENT_ONE_TIME, EVENT_ONE_POSTER_URL, EVENT_ONE_NAME,
+				EVENT_ONE_DESCRIPTION, EVENT_ONE_LOCATION, EVENT_ONE_TAGS);
+		JSONObject eventTwoDb = dal.createEvent(userTwoId, EVENT_TWO_TIME, EVENT_TWO_POSTER_URL, EVENT_TWO_NAME,
+				EVENT_TWO_DESCRIPTION, EVENT_TWO_LOCATION, EVENT_TWO_TAGS);
 		eventOneId = (int) eventOneDb.get("eID");
 		eventTwoId = (int) eventTwoDb.get("eID");
-		
+
 		eventSearchResult = new JSONObject();
 		JSONArray eventResults = new JSONArray();
 		JSONObject event = new JSONObject();
@@ -325,7 +326,7 @@ public class TestDAL {
 		event.put("posterUrl", EVENT_ONE_POSTER_URL);
 		eventResults.add(event);
 		eventSearchResult.put("events", eventResults);
-		
+
 		assertTrue(compareEvents(eventOne, eventOneDb));
 		assertTrue(compareEvents(eventTwo, eventTwoDb));
 	}
@@ -340,8 +341,8 @@ public class TestDAL {
 		assertEquals("Event Time cannot be left empty", e.getMessage());
 
 		e = assertThrows(IllegalArgumentException.class, () -> {
-			dal.createEvent(userOneId, EVENT_ONE_TIME, "", EVENT_ONE_NAME, EVENT_ONE_DESCRIPTION,
-					EVENT_ONE_LOCATION, EVENT_ONE_TAGS);
+			dal.createEvent(userOneId, EVENT_ONE_TIME, "", EVENT_ONE_NAME, EVENT_ONE_DESCRIPTION, EVENT_ONE_LOCATION,
+					EVENT_ONE_TAGS);
 		});
 		assertEquals("Poster must be uploaded", e.getMessage());
 
@@ -356,8 +357,8 @@ public class TestDAL {
 	@Order(16)
 	public void createExistingEvent() {
 		Exception e = assertThrows(IllegalArgumentException.class, () -> {
-			dal.createEvent(userOneId, EVENT_ONE_TIME, EVENT_ONE_POSTER_URL, EVENT_ONE_NAME,
-					EVENT_ONE_DESCRIPTION, EVENT_ONE_LOCATION, EVENT_ONE_TAGS);
+			dal.createEvent(userOneId, EVENT_ONE_TIME, EVENT_ONE_POSTER_URL, EVENT_ONE_NAME, EVENT_ONE_DESCRIPTION,
+					EVENT_ONE_LOCATION, EVENT_ONE_TAGS);
 		});
 		assertTrue(e.getMessage().contains("Detail: Key (posterurl)=(" + EVENT_ONE_POSTER_URL + ") already exists."));
 	}
@@ -386,7 +387,6 @@ public class TestDAL {
 		});
 		assertEquals(e.getMessage(), "Event was not found in the database");
 
-		
 		dal.deleteEvent(eventTwoId, userTwoId);
 		e = assertThrows(NullPointerException.class, () -> {
 			dal.retrieveEvent(eventTwoId);
@@ -426,7 +426,7 @@ public class TestDAL {
 		tagArr.add("Online");
 		tagArr.add("Sport");
 		updatedEvent.put("tags", tagArr);
-		
+
 		Set<String> newTags = new HashSet<String>(Arrays.asList("Online", "Sport"));
 		assertTrue(compareEvents(updatedEvent, dal.updateEvent(eventOneId, userOneId, "New Description",
 				Timestamp.valueOf("2022-04-05 14:55:15.888"), "New Name", "New Location", newTags)));
@@ -439,8 +439,8 @@ public class TestDAL {
 	@Order(20)
 	public void updateNullParamsEvent() {
 		Exception e = assertThrows(IllegalArgumentException.class, () -> {
-			dal.updateEvent(eventOneId, userOneId, EVENT_ONE_DESCRIPTION, null, EVENT_ONE_NAME,
-					EVENT_ONE_LOCATION, EVENT_ONE_TAGS);
+			dal.updateEvent(eventOneId, userOneId, EVENT_ONE_DESCRIPTION, null, EVENT_ONE_NAME, EVENT_ONE_LOCATION,
+					EVENT_ONE_TAGS);
 		});
 		assertEquals("Event Time cannot be left empty", e.getMessage());
 
@@ -455,8 +455,8 @@ public class TestDAL {
 	@Order(21)
 	public void updateUnknownEvent() {
 		Exception e = assertThrows(NullPointerException.class, () -> {
-			dal.updateEvent(0, userOneId, EVENT_ONE_DESCRIPTION, EVENT_ONE_TIME, EVENT_ONE_NAME,
-					EVENT_ONE_LOCATION, EVENT_ONE_TAGS);
+			dal.updateEvent(0, userOneId, EVENT_ONE_DESCRIPTION, EVENT_ONE_TIME, EVENT_ONE_NAME, EVENT_ONE_LOCATION,
+					EVENT_ONE_TAGS);
 		});
 		assertTrue(e.getMessage().equals("Event was not found in the database"));
 	}
@@ -468,7 +468,7 @@ public class TestDAL {
 				Timestamp.valueOf("2022-04-05 14:55:10.888"));
 		JSONObject temp = dal.retrieveEvent(eventOneId);
 		assertEquals("inactive", (String) temp.get("status"));
-		
+
 		dal.updateEventStatus("active", Timestamp.valueOf("2022-04-03 14:55:10.888"),
 				Timestamp.valueOf("2022-04-05 14:55:10.888"));
 		temp = dal.retrieveEvent(eventOneId);
@@ -576,7 +576,7 @@ public class TestDAL {
 	@Order(24)
 	public void retrieveEventsByKnownTags() {
 		Set<String> mathTags = new HashSet<String>(Arrays.asList("test"));
-		
+
 		assertTrue(compareEventLists(eventSearchResult, dal.retrieveEventsByTag(mathTags, "")));
 	}
 
@@ -621,7 +621,8 @@ public class TestDAL {
 		Exception e = assertThrows(NullPointerException.class, () -> {
 			dal.subscribeTo(userOneId, userTwoId);
 		});
-		String expectedError = "Detail: Key (followerid, followedid)=(" + userOneId + ", " + userTwoId + ") already exists.";
+		String expectedError = "Detail: Key (followerid, followedid)=(" + userOneId + ", " + userTwoId
+				+ ") already exists.";
 		assertTrue(e.getMessage().contains(expectedError));
 	}
 
@@ -675,7 +676,8 @@ public class TestDAL {
 		Exception e = assertThrows(NullPointerException.class, () -> {
 			dal.rsvpTo(USER_ONE_EMAIL, USER_ONE_FIRST_NAME, eventTwoId, EVENT_ONE_TIME);
 		});
-		String expectedError = "Detail: Key (event, email)=(" + eventTwoId + ", " + USER_ONE_EMAIL + ") already exists.";
+		String expectedError = "Detail: Key (event, email)=(" + eventTwoId + ", " + USER_ONE_EMAIL
+				+ ") already exists.";
 		assertTrue(e.getMessage().contains(expectedError));
 	}
 
@@ -760,7 +762,7 @@ public class TestDAL {
 			String eTwoTag = (String) tagsTwo.get(i);
 			eTwoTags.add(eTwoTag);
 		}
-		
+
 		boolean ownerComp = eOneOwner == eTwoOwner;
 		boolean timeComp = eOneTime.equals(eTwoTime);
 		boolean urlComp = eOneUrl.equals(eTwoUrl);
@@ -836,4 +838,3 @@ public class TestDAL {
 		return equals;
 	}
 }
-
