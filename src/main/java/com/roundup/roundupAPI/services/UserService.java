@@ -1,6 +1,7 @@
 package com.roundup.roundupAPI.services;
 
 import org.json.simple.JSONObject;
+import org.springframework.stereotype.Service;
 
 import com.roundup.roundupAPI.database.DAL;
 
@@ -10,6 +11,7 @@ import java.util.Base64;
 This class calls the data access layer and performs the desired operations to
 retrieve user information from the database.
 */
+@Service
 public class UserService {
 	/**
 	 * @param firstName: the first name of the new user

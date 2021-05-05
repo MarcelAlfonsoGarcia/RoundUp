@@ -7,6 +7,7 @@ import java.util.Set;
 
 import org.json.simple.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.ComponentScan;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -21,6 +22,8 @@ import com.roundup.roundupAPI.services.EventService;
  * as a response.
  */
 @RestController
+@ComponentScan("com.roundup.roundupAPI.services")
+@RequestMapping(value = "api/events")
 public class EventController {
 	/*
 	 * An instance of the event service
@@ -48,7 +51,7 @@ public class EventController {
 	 * This method handles POST requests with the /events route as attempts to add
 	 * new event information and accesses the DAL to do that.
 	 */
-	@RequestMapping(method = RequestMethod.POST, value = "api/events/")
+	@RequestMapping(method = RequestMethod.POST)
 	public JSONObject addEvent(@RequestBody JSONObject body) {
 		/*
 		 * 1. Get EventService instance to create a new event. 2. Retrieve new event
@@ -74,7 +77,7 @@ public class EventController {
 	 * This method handles GET requests with the /events/eventID route as attempts
 	 * to retrieve event information and accesses the DAL to do that.
 	 */
-	@RequestMapping(method = RequestMethod.GET, value = "api/events/{eID}")
+	@RequestMapping(method = RequestMethod.GET, value = "/{eID}")
 	public JSONObject getEvent(@PathVariable("eID") int eID) {
 		/*
 		 * 1. Get EventService instance to retrieve event information. 2. Return JSON
@@ -93,7 +96,7 @@ public class EventController {
 	 * This method handles DELETE requests with the /events/eventID route as
 	 * attempts to delete event information and accesses the DAL to do that.
 	 */
-	@RequestMapping(method = RequestMethod.DELETE, value = "api/events/")
+	@RequestMapping(method = RequestMethod.DELETE)
 	public void deleteEvent(@RequestBody JSONObject body) {
 		/*
 		 * 1. Get EventService instance to delete an event. 2. retrieve deleted event
@@ -127,7 +130,7 @@ public class EventController {
 	 * This method handles PUT requests with the /events route as attempts to update
 	 * event information and accesses the DAL to do that.
 	 */
-	@RequestMapping(method = RequestMethod.PUT, value = "api/events/{eID}/")
+	@RequestMapping(method = RequestMethod.PUT, value = "/{eID}/")
 	public JSONObject updateEvent(@PathVariable("eID") int eID, @RequestBody JSONObject body) {
 
 		/*
@@ -165,7 +168,7 @@ public class EventController {
 	 *          This method handles GET requests with the /events/ route as attempts
 	 *          to retrieve information on events according to tags
 	 */
-	@RequestMapping(method = RequestMethod.GET, value = "api/events/tags")
+	@RequestMapping(method = RequestMethod.GET, value = "/tags")
 	public JSONObject getEventsByTag(@RequestBody JSONObject body) {
 		String status = (String) body.get("status");
 		List<String> tagList = (List<String>) body.get("tags");
@@ -182,7 +185,7 @@ public class EventController {
 	 *          This method handles GET requests with the /events/userID route as
 	 *          attempts to retrieve information on events according to the owner
 	 */
-	@RequestMapping(method = RequestMethod.GET, value = "api/events/{uID}")
+	@RequestMapping(method = RequestMethod.GET, value = "/{uID}")
 	public JSONObject getEventsByOwner(@PathVariable("uID") int uID, @RequestBody JSONObject body) {
 		String status = (String) body.get("status");
 		return eventService.getEventsByOwner(uID, status);
@@ -198,7 +201,7 @@ public class EventController {
 	 *          attempts to retrieve information on events according to the
 	 *          specified search
 	 */
-	@RequestMapping(method = RequestMethod.GET, value = "api/events/search")
+	@RequestMapping(method = RequestMethod.GET, value = "/search")
 	public JSONObject getEventsByName(@RequestBody JSONObject body) {
 		String search = (String) body.get("search");
 		String status = (String) body.get("status");
@@ -214,7 +217,7 @@ public class EventController {
 	 *          This method handles GET requests with the /events/ route as attempts
 	 *          to retrieve information on events according to the timeframe
 	 */
-	@RequestMapping(method = RequestMethod.GET, value = "api/events/timeframe")
+	@RequestMapping(method = RequestMethod.GET, value = "/timeframe")
 	public JSONObject getEventsByTime(@RequestBody JSONObject body) {
 		Timestamp fromTime = Timestamp.valueOf((String) body.get("fromTime"));
 		Timestamp toTime = Timestamp.valueOf((String) body.get("toTime"));
@@ -231,7 +234,7 @@ public class EventController {
 	 * attempts to retrieve information on event attendees and accesses the DAL to
 	 * do that.
 	 */
-	@RequestMapping(method = RequestMethod.GET, value = "api/events/{eID}/attendees/")
+	@RequestMapping(method = RequestMethod.GET, value = "/{eID}/attendees/")
 	public JSONObject getAttendees(@PathVariable("eID") int eID) {
 		/*
 		 * 1. Get EventService instance to retrieve event attendees. 2. Return JSON

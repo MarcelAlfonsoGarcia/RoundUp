@@ -1,12 +1,16 @@
 package com.roundup.roundupAPI.services;
 
 import java.sql.Timestamp;
+
+import org.springframework.stereotype.Service;
+
 import com.roundup.roundupAPI.database.DAL;
 
 /*
 This class calls the data access layer and performs the desired operations to
 retrieve rsvp information from the database.
 */
+@Service
 public class RSVPService {
 	/**
 	 * @param email:   the email of the user who is rsvp'ing

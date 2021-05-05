@@ -4,6 +4,7 @@ import java.sql.Timestamp;
 import java.util.Set;
 
 import org.json.simple.JSONObject;
+import org.springframework.stereotype.Service;
 
 import com.roundup.roundupAPI.database.DAL;
 
@@ -11,6 +12,7 @@ import com.roundup.roundupAPI.database.DAL;
 This class calls the data access layer and performs the desired operations to
 retrieve event information from the database.
 */
+@Service
 public class EventService {
 	/**
 	 * @param userId:      the ID of the user who is creating the event
