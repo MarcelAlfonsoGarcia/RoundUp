@@ -1,1 +1,1 @@
-web: java -cp target/classes:target/dependency/* com.roundup.roundupAPI.heroku.Main
+web: java -jar target/RoundUp-0.0.1-SNAPSHOT.jar

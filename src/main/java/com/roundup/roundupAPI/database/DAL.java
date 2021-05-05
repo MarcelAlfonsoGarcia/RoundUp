@@ -9,7 +9,6 @@
 */
 package com.roundup.roundupAPI.database;
 
-import java.net.URI;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.ResultSet;
@@ -19,6 +18,9 @@ import java.sql.Timestamp;
 import java.util.Set;
 import java.util.StringJoiner;
 
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.*;
+
 import org.json.simple.JSONObject;
 import org.json.simple.JSONArray;
 
@@ -27,6 +29,9 @@ public class DAL {
 	// the singleton instance of the DAL object
 	private static DAL instance;
 	private static Connection c;
+
+//	@Value("${spring.datasource.url}")
+//	private String dbUrl;
 
 	/**
 	 * @param none
@@ -40,18 +45,9 @@ public class DAL {
 	 */
 	private DAL() {
 		try {
-//			String dbUrls = "postgres://kproipogvexbbm:2810f0e0743eb39b9b84189023ffbd36f43f7156827da2ba984fca64633236be@ec2-54-161-239-198.compute-1.amazonaws.com:5432/d57evff6a32s3o";
-//			URI dbUri = new URI(dbUrls);
-			
-//		    String username = dbUri.getUserInfo().split(":")[0];
-//		    String password = dbUri.getUserInfo().split(":")[1];
-//		    String dbUrl = "jdbc:postgresql://" + dbUri.getHost() + ':' + dbUri.getPort() + dbUri.getPath();
-
-			String dbUrl = "jdbc:postgresql://ec2-54-161-239-198.compute-1.amazonaws.com:5432/d57evff6a32s3o?password=2810f0e0743eb39b9b84189023ffbd36f43f7156827da2ba984fca64633236be&sslmode=require&user=kproipogvexbbm";
-		    Class.forName("org.postgresql.Driver");
+			String dbUrl =  "jdbc:postgresql://ec2-54-161-239-198.compute-1.amazonaws.com:5432/d57evff6a32s3o?password=2810f0e0743eb39b9b84189023ffbd36f43f7156827da2ba984fca64633236be&sslmode=require&user=kproipogvexbbm";
+			Class.forName("org.postgresql.Driver");
 			c = DriverManager.getConnection(dbUrl);
-
-//			c = DriverManager.getConnection(dbUrl, username, password);
 		} catch (Exception e) {
 			e.printStackTrace();
 			throw new NullPointerException("Could not establish a connection to the database: " + e.getMessage());
@@ -170,17 +166,17 @@ public class DAL {
 		try (Statement s = c.createStatement()) {
 			String check = "SELECT * FROM users WHERE uID = " + userId + ";";
 			ResultSet checkResult = s.executeQuery(check);
-			
+
 			if (!checkResult.next()) {
 				throw new NullPointerException("No user exists under the provided information");
 			}
-						
+
 			String events = "SELECT eID FROM events WHERE owner = " + userId + ";";
 			ResultSet eventsResult = s.executeQuery(events);
 			while (eventsResult.next()) {
 				this.deleteEvent(eventsResult.getInt("eID"), userId);
 			}
-			
+
 			s.executeUpdate("DELETE FROM subscribes WHERE followerID = " + userId + " OR followedID = " + userId + ";");
 			s.executeUpdate("DELETE FROM users WHERE uID = " + userId + ";");
 		} catch (SQLException e) {
@@ -331,11 +327,11 @@ public class DAL {
 		try (Statement s = c.createStatement()) {
 			String check = "SELECT * FROM events WHERE eID = " + eventId + ";";
 			ResultSet checkResult = s.executeQuery(check);
-			
+
 			if (!checkResult.next()) {
 				throw new NullPointerException("No event exists under the provided information");
 			}
-			
+
 			s.executeUpdate("DELETE FROM rsvps WHERE event = " + eventId);
 			s.executeUpdate("DELETE FROM tags WHERE event = " + eventId);
 			s.executeUpdate("DELETE FROM events WHERE eID = " + eventId + " AND owner = " + userId);
@@ -377,7 +373,7 @@ public class DAL {
 			query.append(" RETURNING *;");
 
 			JSONObject event = eventJsonTransformer(s.executeQuery(query.toString()));
-		
+
 			// we cannot update the rows in the table, simply remove them and re-add them
 			s.executeUpdate("DELETE FROM tags WHERE event = " + eventId);
 
@@ -458,7 +454,7 @@ public class DAL {
 	 *         that have the set tags, we can also request what status they will
 	 *         have. If no status is given, all the events with the set tags will be
 	 *         returned.
-	 *         
+	 * 
 	 *         Creating the JSON will be done through the eventListJsonTransformer
 	 *         method
 	 */
@@ -466,13 +462,13 @@ public class DAL {
 		try (Statement s = c.createStatement()) {
 			StringBuilder query = new StringBuilder("SELECT eID, owner, posterUrl, name, eventTime, location, description FROM events WHERE eID IN ");
 			query.append("(SELECT event FROM tags WHERE tag IN ");
-			
+
 			StringJoiner sj = new StringJoiner(",", "(", ")");
 			for (String tag : tags) {
 				sj.add("'" + tag + "'");
 			}
 			query.append(sj.toString()).append(")");
-			
+
 			if (!status.isEmpty()) {
 				query.append(" AND status = " + status);
 			}
@@ -609,13 +605,14 @@ public class DAL {
 	 */
 	public void unsubscribeFrom(int followerId, int followedId) {
 		try (Statement s = c.createStatement()) {
-			String check = "SELECT * FROM subscribes WHERE followerID = " + followerId + " AND followedID = " + followedId + ";";
+			String check = "SELECT * FROM subscribes WHERE followerID = " + followerId + " AND followedID = "
+					+ followedId + ";";
 			ResultSet checkResult = s.executeQuery(check);
-			
+
 			if (!checkResult.next()) {
 				throw new NullPointerException("Cannot unsubscribe from unknown relationship");
 			}
-			
+
 			String query = "DELETE FROM subscribes WHERE followerID = " + followerId + " AND followedID = " + followedId
 					+ ";";
 			s.executeUpdate(query);
@@ -637,7 +634,7 @@ public class DAL {
 	 */
 	public JSONObject retrieveSubscriptions(int userId) {
 		try (Statement s = c.createStatement()) {
-			StringBuilder query = new StringBuilder("SELECT uID, firstName, lastName FROM users WHERE uID = ");
+			StringBuilder query = new StringBuilder("SELECT uID, firstName, lastName FROM users WHERE uID IN ");
 			query.append("(SELECT followedID FROM subscribes WHERE followerID = ").append(userId).append(");");
 
 			return userListJsonTransformer(s.executeQuery(query.toString()));
@@ -659,7 +656,7 @@ public class DAL {
 	 */
 	public JSONObject retrieveSubscribers(int userId) {
 		try (Statement s = c.createStatement()) {
-			StringBuilder query = new StringBuilder("SELECT uID, firstName, lastName FROM users WHERE uID = ");
+			StringBuilder query = new StringBuilder("SELECT uID, firstName, lastName FROM users WHERE uID IN ");
 			query.append("(SELECT followerID FROM subscribes WHERE followedID = ").append(userId).append(");");
 
 			return userListJsonTransformer(s.executeQuery(query.toString()));
@@ -685,8 +682,8 @@ public class DAL {
 		}
 
 		try (Statement s = c.createStatement()) {
-			String query = "INSERT INTO rsvps (email, name, event, signupTime) VALUES ('" + email + "', '" + name + "', "
-					+ eventId + ", '" + time + "');";
+			String query = "INSERT INTO rsvps (email, name, event, signupTime) VALUES ('" + email + "', '" + name
+					+ "', " + eventId + ", '" + time + "');";
 
 			s.executeUpdate(query);
 		} catch (SQLException e) {
@@ -709,15 +706,14 @@ public class DAL {
 		}
 
 		try (Statement s = c.createStatement()) {
-			
+
 			String check = "SELECT * FROM rsvps WHERE email = '" + email + "' AND event = " + eventId + ";";
 			ResultSet checkResult = s.executeQuery(check);
-			
+
 			if (!checkResult.next()) {
 				throw new NullPointerException("User is not RSVPd to this event");
 			}
-			
-			
+
 			String query = "DELETE FROM rsvps WHERE email = '" + email + "' AND event = " + eventId + ";";
 			s.executeUpdate(query);
 		} catch (SQLException e) {
@@ -837,7 +833,7 @@ public class DAL {
 			event.put("location", eventRs.getString("location"));
 			event.put("popularity", eventRs.getInt("popularity"));
 			event.put("status", eventRs.getString("status"));
-			
+
 			eventRs.close();
 			return event;
 		} else {

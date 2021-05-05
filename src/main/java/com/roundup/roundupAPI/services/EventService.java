@@ -8,7 +8,6 @@ import org.springframework.stereotype.Service;
 
 import com.roundup.roundupAPI.database.DAL;
 
-
 /*
 This class calls the data access layer and performs the desired operations to
 retrieve event information from the database.
@@ -38,13 +37,13 @@ public class EventService {
 	  */
 		return dal.createEvent(userID, eventTime, poster, name, description, location, tags);
 	}
-	
+
 	/**
-	  @param eventId: the id of the specific event
-	  @return the newly retrieved event object
-	
-	  THis method retireves and event with the given id.
-	*/
+	 * @param eventId: the id of the specific event
+	 * @return the newly retrieved event object
+	 * 
+	 *         THis method retireves and event with the given id.
+	 */
 	public JSONObject getEvent(int eventID) {
 	  /*
 	    1. Pass the event id to the data access layer and tell it to retrieve specific event from the database.
@@ -53,8 +52,9 @@ public class EventService {
 	  */
 		return dal.retrieveEvent(eventID);
 	}
-	
+
 	/**
+<<<<<<< HEAD
 	  @param eventId:  the id of the event to be updated
 	  @param userId: the user id of the user trying to update the event
 	  @param description: the new description for the event
@@ -75,15 +75,15 @@ public class EventService {
 	  */
 		return dal.updateEvent(eventID, userId, description, eventTime, name, location, tags);
 	}
-	
+
 	/**
-	  @param eventId: the id of the specific event
-	  @param userID: the person requesting the delete
-	
-	  @return: the deleted event object
-	
-	  This method deletes an event with the given id.
-	*/
+	 * @param eventId: the id of the specific event
+	 * @param userID:  the person requesting the delete
+	 * 
+	 * @return: the deleted event object
+	 * 
+	 *          This method deletes an event with the given id.
+	 */
 	public void deleteEvent(int eventID, int userID) {
 	  /*
 	    1. Pass the event id to the data access layer and tell it to delete the event from the database.
@@ -92,23 +92,25 @@ public class EventService {
 	  */
 		dal.deleteEvent(eventID, userID);
 	}
-	
+
 	/**
-	 * @return All the tags existing in our database. This is needed since we don't allow users to create their own tags
+	 * @return All the tags existing in our database. This is needed since we don't
+	 *         allow users to create their own tags
 	 * 
 	 */
 	public JSONObject getAllTags() {
 		return dal.retrieveAllTags();
 	}
-	
+
 	/**
-	  @param tags: a list of tags associated with the event
-	  @param status: the status of events user is interested in
-	
-	  @return: a list of events that satisfy the tags and status
-	
-	  This method retrieves a list of events the user that satisfy the given tags/ status.
-	*/
+	 * @param tags:   a list of tags associated with the event
+	 * @param status: the status of events user is interested in
+	 * 
+	 * @return: a list of events that satisfy the tags and status
+	 * 
+	 *          This method retrieves a list of events the user that satisfy the
+	 *          given tags/ status.
+	 */
 	public JSONObject getEventsByTag(Set<String> tags, String status) {
 	  /*
 	    1. Pass the tags and status to the database access layer and retrieve events that satify them.
@@ -117,56 +119,58 @@ public class EventService {
 	  */
 		return dal.retrieveEventsByTag(tags, status);
 	}
-	
+
 	/**
-	  @param userId: the id of the user who owns the event
-	  @param status: the status of events user is interested in
-	
-	  @return: a list of events owned by the user and status
-	
-	  This method retrieves a list of events owned by the user
-	*/
+	 * @param userId: the id of the user who owns the event
+	 * @param status: the status of events user is interested in
+	 * 
+	 * @return: a list of events owned by the user and status
+	 * 
+	 *          This method retrieves a list of events owned by the user
+	 */
 	public JSONObject getEventsByOwner(int userId, String status) {
 
 		return dal.retrieveEventsByOwner(userId, status);
 	}
-	
+
 	/**
-	  @param search: a string that should be contained in the name of the event
-	  @param status: the status of events user is interested in
-	
-	  @return: a list of events with the search in the name and status
-	
-	  This method retrieves a list of events that contain the search in the name
-	*/
+	 * @param search: a string that should be contained in the name of the event
+	 * @param status: the status of events user is interested in
+	 * 
+	 * @return: a list of events with the search in the name and status
+	 * 
+	 *          This method retrieves a list of events that contain the search in
+	 *          the name
+	 */
 	public JSONObject getEventsByName(String search, String status) {
 
 		return dal.retrieveEventsByName(search, status);
 	}
 
 	/**
-	  @param fromTime: the earliest time for the events in question
-	  @param toTime:   the latest time for the events in question
-	
-	  @return: a list of events happening between the given times
-	
-	  This method retrieves a list of events that are scheduled to occur between the given times
-	*/
+	 * @param fromTime: the earliest time for the events in question
+	 * @param toTime:   the latest time for the events in question
+	 * 
+	 * @return: a list of events happening between the given times
+	 * 
+	 *          This method retrieves a list of events that are scheduled to occur
+	 *          between the given times
+	 */
 	public JSONObject getEventsByTime(Timestamp fromTime, Timestamp toTime) {
 
 		return dal.retrieveEventsByTime(fromTime, toTime);
 	}
-	
+
 	/**
-	  @param eventID: the id of the user
-	  @return: a list of attendees for the event
-	
-	  This method retrieves the list of attendees for a given event.
-	*/
+	 * @param eventID: the id of the user
+	 * @return: a list of attendees for the event
+	 * 
+	 *          This method retrieves the list of attendees for a given event.
+	 */
 	public JSONObject getAttendees(int eventID) {
 	  /*
 	    1. Passes the event id to the data access layer and asks it for rsvps with the provided event id.
-	    2. Asks the data acess layer for information on users with the retrieved user ids.
+	    2. Asks the data access layer for information on users with the retrieved user ids.
 	    3. If successful, it creates user objects with the proided information and, and adds
 	    them to a list.
 	    4. Return the list of User objects.

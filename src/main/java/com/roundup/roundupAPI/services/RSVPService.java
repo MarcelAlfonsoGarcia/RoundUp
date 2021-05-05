@@ -1,9 +1,7 @@
 package com.roundup.roundupAPI.services;
 
 import java.sql.Timestamp;
-
 import org.springframework.stereotype.Service;
-
 import com.roundup.roundupAPI.database.DAL;
 
 
@@ -31,15 +29,14 @@ public class RSVPService {
 		// performing operation
 		dal.rsvpTo(email, name, eventID, time);
 	};
-	
-	
+
 	/**
-	  @param rsvspID: the id of the rsvsp object
-	
-	  @return: the delete RSVP object
-	
-	  This method deletes rsvsp information from the database.
-	*/
+	 * @param rsvspID: the id of the rsvsp object
+	 * 
+	 * @return: the delete RSVP object
+	 * 
+	 *          This method deletes rsvsp information from the database.
+	 */
 	public void deleteRsvp(String email, int eventID) {
 	  /*
 	    1. Pass the rsvp id to the data access layer and tell it to delete the rsvp from the database.
