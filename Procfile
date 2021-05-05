@@ -1,1 +1,1 @@
-web: java -cp target/classes:target/dependency/* com.roundup.roundupAPI.RoundupApiApplication.Main
+web: java com.roundup.roundupAPI.RoundupApiApplication.Main
