@@ -1,13 +1,20 @@
 package com.roundup.roundupAPI.services;
 
-import com.roundup.roundupAPI.database.DAL;
 
+import org.json.simple.JSONObject;
+import org.springframework.stereotype.Service;
+
+import com.roundup.roundupAPI.database.DAL;
 
 /*
 This class calls the data access layer and performs the desired operations to
 retrieve subscription information from the database.
 */
+@Service
 public class SubscriptionService {
+	
+	public static DAL dal = DAL.getInstance();
+	
 	/**
 	    @param followerID: the id of the user who is doing the following
 	    @param followedID: the id of the user being followed
@@ -22,7 +29,7 @@ public class SubscriptionService {
 	    2. Create an subscription object with the provided subscription information.
 	    3. Return the subscription object.
 	  */
-		DAL.getInstance().subscribeTo(followerID, followedID);;
+		dal.subscribeTo(followerID, followedID);;
 	};
 
 
@@ -40,6 +47,6 @@ public class SubscriptionService {
 	  2. Create an subscription object with the provided subscription information.
 	  3. Return the Subscription object.
 	*/
-		DAL.getInstance().unsubscribeFrom(followerID, followedID);
+		dal.unsubscribeFrom(followerID, followedID);
 	}
 }
