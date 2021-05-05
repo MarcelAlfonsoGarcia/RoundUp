@@ -11,7 +11,7 @@ public class RoundupApiApplication {
     @RequestMapping("/")
     @ResponseBody
     public String home() {
-      return "Hello World!";
+      return "<h1>Hello World!</h1>";
     }
     
 	public static void main(String[] args) {

@@ -634,7 +634,7 @@ public class DAL {
 	 */
 	public JSONObject retrieveSubscriptions(int userId) {
 		try (Statement s = c.createStatement()) {
-			StringBuilder query = new StringBuilder("SELECT uID, firstName, lastName FROM users WHERE uID = ");
+			StringBuilder query = new StringBuilder("SELECT uID, firstName, lastName FROM users WHERE uID IN ");
 			query.append("(SELECT followedID FROM subscribes WHERE followerID = ").append(userId).append(");");
 
 			return userListJsonTransformer(s.executeQuery(query.toString()));
@@ -656,7 +656,7 @@ public class DAL {
 	 */
 	public JSONObject retrieveSubscribers(int userId) {
 		try (Statement s = c.createStatement()) {
-			StringBuilder query = new StringBuilder("SELECT uID, firstName, lastName FROM users WHERE uID = ");
+			StringBuilder query = new StringBuilder("SELECT uID, firstName, lastName FROM users WHERE uID IN ");
 			query.append("(SELECT followerID FROM subscribes WHERE followedID = ").append(userId).append(");");
 
 			return userListJsonTransformer(s.executeQuery(query.toString()));

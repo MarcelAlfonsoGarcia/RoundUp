@@ -77,7 +77,7 @@ public class EventController {
 	 * This method handles GET requests with the /events/eventID route as attempts
 	 * to retrieve event information and accesses the DAL to do that.
 	 */
-	@RequestMapping(method = RequestMethod.GET, value = "/{eID}")
+	@RequestMapping(method = RequestMethod.GET, value = "/{eID}/")
 	public JSONObject getEvent(@PathVariable("eID") int eID) {
 		/*
 		 * 1. Get EventService instance to retrieve event information. 2. Return JSON
@@ -154,7 +154,7 @@ public class EventController {
 	 *         This method handles GET requests with the /events/tags route as
 	 *         attempts to retrieve information on event tags
 	 */
-	@RequestMapping(method = RequestMethod.GET, value = "api/tags")
+	@RequestMapping(method = RequestMethod.GET, value = "/tags/")
 	public JSONObject getAllTags() {
 		return eventService.getAllTags();
 	}
@@ -168,7 +168,7 @@ public class EventController {
 	 *          This method handles GET requests with the /events/ route as attempts
 	 *          to retrieve information on events according to tags
 	 */
-	@RequestMapping(method = RequestMethod.GET, value = "/tags")
+	@RequestMapping(method = RequestMethod.GET, value = "/filter/tags/")
 	public JSONObject getEventsByTag(@RequestBody JSONObject body) {
 		String status = (String) body.get("status");
 		List<String> tagList = (List<String>) body.get("tags");
@@ -185,7 +185,7 @@ public class EventController {
 	 *          This method handles GET requests with the /events/userID route as
 	 *          attempts to retrieve information on events according to the owner
 	 */
-	@RequestMapping(method = RequestMethod.GET, value = "/{uID}")
+	@RequestMapping(method = RequestMethod.GET, value = "/filter/{uID}/")
 	public JSONObject getEventsByOwner(@PathVariable("uID") int uID, @RequestBody JSONObject body) {
 		String status = (String) body.get("status");
 		return eventService.getEventsByOwner(uID, status);
@@ -201,7 +201,7 @@ public class EventController {
 	 *          attempts to retrieve information on events according to the
 	 *          specified search
 	 */
-	@RequestMapping(method = RequestMethod.GET, value = "/search")
+	@RequestMapping(method = RequestMethod.GET, value = "/filter/search/")
 	public JSONObject getEventsByName(@RequestBody JSONObject body) {
 		String search = (String) body.get("search");
 		String status = (String) body.get("status");
@@ -217,7 +217,7 @@ public class EventController {
 	 *          This method handles GET requests with the /events/ route as attempts
 	 *          to retrieve information on events according to the timeframe
 	 */
-	@RequestMapping(method = RequestMethod.GET, value = "/timeframe")
+	@RequestMapping(method = RequestMethod.GET, value = "/filter/timeframe/")
 	public JSONObject getEventsByTime(@RequestBody JSONObject body) {
 		Timestamp fromTime = Timestamp.valueOf((String) body.get("fromTime"));
 		Timestamp toTime = Timestamp.valueOf((String) body.get("toTime"));
