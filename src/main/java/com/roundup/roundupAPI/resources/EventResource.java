@@ -164,12 +164,12 @@ public class EventResource {
 	 * This method handles GET requests with the /events/ route as
 	 * attempts to retrieve information on events according to tags
 	 */
-//	@GET
-//	@Path("/")
-//	@Produces(MediaType.APPLICATION_JSON)
-//	public JSONObject getEventsByTag(@QueryParam("tags") Set<String> tags, @QueryParam("status") String status) {
-//		return eventServiceInstance.getEventsByTag(tags, status);
-//	}
+	@GET
+	@Path("/filter/tags")
+	@Produces(MediaType.APPLICATION_JSON)
+	public JSONObject getEventsByTag(@QueryParam("tags") Set<String> tags, @QueryParam("status") String status) {
+		return eventServiceInstance.getEventsByTag(tags, status);
+	}
 
 	/**
 	 * @param userID: the ID of the user who owns the events
@@ -180,13 +180,13 @@ public class EventResource {
 	 * This method handles GET requests with the /events/userID route as
 	 * attempts to retrieve information on events according to the owner
 	 */
-//	@GET
-//	@Path("/{userID}")
-//	@Produces(MediaType.APPLICATION_JSON)
-//	public JSONObject getEventsByOwner(@QueryParam("userID") int userID, @QueryParam("status") String status) {
-//		return eventServiceInstance.getEventsByOwner(userID, status);
-//	}
-//	
+	@GET
+	@Path("/filter/{userID}")
+	@Produces(MediaType.APPLICATION_JSON)
+	public JSONObject getEventsByOwner(@QueryParam("userID") int userID, @QueryParam("status") String status) {
+		return eventServiceInstance.getEventsByOwner(userID, status);
+	}
+	
 	/**
 	 * @param search: a string that should be contained in the name of the event
 	 * @param status: the status of events user is interested in
@@ -196,12 +196,12 @@ public class EventResource {
 	 * This method handles GET requests with the /events/userID route as
 	 * attempts to retrieve information on events according to the specified search
 	 */
-//	@GET
-//	@Path("/")
-//	@Produces(MediaType.APPLICATION_JSON)
-//	public JSONObject getEventsByName(@QueryParam("search") String search, @QueryParam("status") String status) {
-//		return eventServiceInstance.getEventsByName(search, status);
-//	}
+	@GET
+	@Path("/filter/{search}")
+	@Produces(MediaType.APPLICATION_JSON)
+	public JSONObject getEventsByName(@QueryParam("search") String search, @QueryParam("status") String status) {
+		return eventServiceInstance.getEventsByName(search, status);
+	}
 	
 	/**
 	 * @param fromTime: the earliest time for the events in question
@@ -212,12 +212,12 @@ public class EventResource {
 	 * This method handles GET requests with the /events/ route as
 	 * attempts to retrieve information on events according to the timeframe
 	 */
-//	@GET
-//	@Path("/")
-//	@Produces(MediaType.APPLICATION_JSON)
-//	public JSONObject getEventsByTime(@QueryParam("fromTime") Timestamp fromTime, @QueryParam("toTime") Timestamp toTime) {
-//		return eventServiceInstance.getEventsByTime(fromTime, toTime);
-//	}
+	@GET
+	@Path("/filter/time")
+	@Produces(MediaType.APPLICATION_JSON)
+	public JSONObject getEventsByTime(@QueryParam("fromTime") Timestamp fromTime, @QueryParam("toTime") Timestamp toTime) {
+		return eventServiceInstance.getEventsByTime(fromTime, toTime);
+	}
 	
 	/*
 	 * @param eventID: the id of the event
