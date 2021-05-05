@@ -1,18 +1,13 @@
-package com.roundup.roundupAPI.resources;
+package com.roundup.roundupAPI.controllers;
 
-import jakarta.ws.rs.Consumes;
-import jakarta.ws.rs.DELETE;
-//import jakarta.ws.rs.GET;
-import jakarta.ws.rs.POST;
-import jakarta.ws.rs.Path;
-import jakarta.ws.rs.PathParam;
-import jakarta.ws.rs.Produces;
-import jakarta.ws.rs.QueryParam;
-import jakarta.ws.rs.core.MediaType;
+import java.sql.Timestamp;
 
 import org.json.simple.JSONObject;
-//import org.json.simple.JSONArray;
-
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RestController;
 import com.roundup.roundupAPI.services.RSVPService;
 
 
@@ -21,13 +16,14 @@ This module handles requests that have to do with rsvps.
 It handles GET, POST, DELETE, and PUT requests from the client API and
 provides a JsonObject as a response.
 */
-@Path("/rsvps")
-public class RSVPResource {
+@RestController
+public class RSVPController {
 	
 	/* 
 	 * An instance of the rsvp service  
 	*/
-	private RSVPService rsvpServiceInstance = new RSVPService();
+	@Autowired
+	private RSVPService rsvpService;
 
 	/*
 	  @param eventID: the id of the associated event
@@ -38,17 +34,19 @@ public class RSVPResource {
 	  This method handles POST requests with the /rsvps route as attempts to
 	  add new rsvp information and accesses the DAL to do that.
 	*/
-	@POST
-//	@Path("/addRsvp")
-	@Consumes(MediaType.APPLICATION_JSON)
-	@Produces(MediaType.APPLICATION_JSON)
-	public void addRsvp(@QueryParam("email") String email, @QueryParam("name") String name, @QueryParam("eventID") int eventID) {
+	@RequestMapping(method=RequestMethod.POST, value="api/rsvps/")
+	public void addRsvp(@RequestBody JSONObject body) {
 	  /*
 	    1. Get RsvpService instance to create a new rsvp.
 	    2. Retrieve new rsvp information
 	    3. Return JSON serialized Rsvp object
 	  */
-		rsvpServiceInstance.addRsvp(email, name, eventID);
+		String email = (String) body.get("email");
+		String name = (String) body.get("name");
+		int eID = (int) body.get("eID");
+		Timestamp time = (Timestamp) body.get("time");
+		
+		rsvpService.addRsvp(email, name, eID, time);
 	};
 	
 	
@@ -61,15 +59,16 @@ public class RSVPResource {
 	  This method handles DELETE requests with the /rsvps route as attempts to
 	  delete rsvp information and accesses the DAL to do that.
 	*/
-	@DELETE
-//	@Path("/deleteRsvp")
-	@Produces(MediaType.APPLICATION_JSON)
-	public void deleteRsvp(@PathParam("email") String email, @PathParam("eventID") int eventID) {
+	@RequestMapping(method=RequestMethod.DELETE, value="api/rsvps/")
+	public void deleteRsvp(@RequestBody JSONObject body) {
 	  /*
 	    1. Get RsvpService instance to delete an rsvp.
 	    2. retrieve deleted rsvp information
 	    3. Return JSON serialized RSVP object
 	  */
-		rsvpServiceInstance.deleteRsvp(email, eventID);
+		String email = (String) body.get("email");
+		int eID = (int) body.get("eID");
+		
+		rsvpService.deleteRsvp(email, eID);
 	};
 };

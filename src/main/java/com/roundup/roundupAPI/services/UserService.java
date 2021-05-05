@@ -1,17 +1,20 @@
 package com.roundup.roundupAPI.services;
 
 import org.json.simple.JSONObject;
-
-import com.roundup.roundupAPI.database.DAL;
-
+import org.springframework.stereotype.Service;
 import java.util.Base64;
 
+import com.roundup.roundupAPI.database.DAL;
 
 /*
 This class calls the data access layer and performs the desired operations to
 retrieve user information from the database.
 */
+@Service
 public class UserService {
+	
+	public static DAL dal = DAL.getInstance();
+	
 	/**
 	  @param firstName: the first name of the new user
 	  @param lastName: the last name of the new user
@@ -29,8 +32,9 @@ public class UserService {
 	    2. If successful, retrieves the user information to create a new User object.
 	    3. Return newly created User object.
 	    
+	    TOOD: Ask Marcel about adding passwor field
 	  */
-		return DAL.getInstance().createUser(firstName, lastName, email, password, campus);
+		return dal.createUser(firstName, lastName, email, password, campus);
 	};
 	
 	/**
@@ -46,9 +50,10 @@ public class UserService {
 	    1. Query data acess layer to check if there's a user with the provided user information.
 	    2. If user exists, create an authentication token and return it to the user
 	    3. Return authentication token
+	    
+	    TODO: ASk Marcel about login functionality
 	  */
-		
-		return DAL.getInstance().logInUser(email, password);
+		return dal.logInUser(email, password);
 	};
 	
 	/**
@@ -109,7 +114,7 @@ public class UserService {
 	    2. If successful, retrieves the user information to create a new User object.
 	    3. Return newly created User object.
 	  */
-		DAL.getInstance().deleteUser(userID);
+		dal.deleteUser(userID);
 	};
 	
 	/**
@@ -145,6 +150,8 @@ public class UserService {
 	    2. If successful, it retrieves the list of rsvps and creates an object with each of them, and adds
 	    them to a list.
 	    3. Return the list of RSVP objects.
+	    
+	    TODO: Ask Marcel about using the userID instead
 	  */
 		return DAL.getInstance().retrieveRsvpdEvents(email, status);
 	};
