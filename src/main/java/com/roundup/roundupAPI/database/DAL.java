@@ -568,7 +568,7 @@ public class DAL {
 			String query = "SELECT eID, owner, posterUrl, name, eventTime, location, description FROM events WHERE eventTime BETWEEN '" + fromTime
 					+ "' AND '" + toTime + "';";
 			ResultSet rs = s.executeQuery(query);
-
+			
 			return eventListJsonTransformer(rs);
 		} catch (SQLException e) {
 			e.printStackTrace();

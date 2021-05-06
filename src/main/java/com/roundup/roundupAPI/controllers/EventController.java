@@ -26,9 +26,6 @@ import com.roundup.roundupAPI.services.EventService;
  * as a response.
  */
 @RestController
-@ComponentScan("com.roundup.roundupAPI.services.EventService")
-@RequestMapping(value = "api/events")
-@CrossOrigin(origins = "*", allowedHeaders = "*")
 public class EventController {
 	/*
 	 * An instance of the event service
@@ -226,12 +223,10 @@ public class EventController {
 		 * This method handles GET requests with the /events/ route as
 		 * attempts to retrieve information on events according to the timeframe
 		 */
-		@CrossOrigin(origins = "http://localhost:3000")
 		@RequestMapping(method=RequestMethod.GET, value="api/events/timeframe/")
-		public JSONObject getEventsByTime(@RequestParam LinkedHashMap params) {
-			Timestamp fromTime = Timestamp.valueOf((String) params.get("fromTime"));
-			Timestamp toTime = Timestamp.valueOf((String) params.get("toTime"));
-
+		public JSONObject getEventsByTime(@RequestParam LinkedHashMap<String, String> params) {
+			Timestamp fromTime = new Timestamp((Long.parseLong((String) params.get("fromTime"))));
+			Timestamp toTime = new Timestamp((Long.parseLong((String) params.get("toTime"))));
 			return eventService.getEventsByTime(fromTime, toTime);
 		}
 		
