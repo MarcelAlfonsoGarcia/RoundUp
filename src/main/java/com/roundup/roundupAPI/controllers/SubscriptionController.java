@@ -2,6 +2,7 @@ package com.roundup.roundupAPI.controllers;
 
 import org.json.simple.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
@@ -11,6 +12,7 @@ import com.roundup.roundupAPI.services.SubscriptionService;
 /**
  * This module handles requests that have to do with a subscription
  */
+@CrossOrigin(origins = "*")
 @RestController
 public class SubscriptionController {
 	/*

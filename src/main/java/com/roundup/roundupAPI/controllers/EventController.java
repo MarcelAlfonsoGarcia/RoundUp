@@ -25,6 +25,7 @@ import com.roundup.roundupAPI.services.EventService;
  * POST, DELETE, and PUT requests from the client API and provides a JSONObject
  * as a response.
  */
+@CrossOrigin(origins = "*")
 @RestController
 public class EventController {
 	/*
