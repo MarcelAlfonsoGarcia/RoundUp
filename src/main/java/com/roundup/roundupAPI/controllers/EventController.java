@@ -82,7 +82,7 @@ public class EventController {
 	  This method handles GET requests with the /events/eventID route as attempts to
 	  retrieve event information and accesses the DAL to do that.
 	*/
-	@CrossOrigin(origins = "http://localhost:3000")
+//	@CrossOrigin(origins = "http://localhost:3000")
 	@RequestMapping(method=RequestMethod.GET, value="api/events/{eID}/")
 	public JSONObject getEvent(@PathVariable("eID") int eID) {
 		/*
