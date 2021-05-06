@@ -35,6 +35,7 @@ public class EventService {
 	    2. Create an event object with the provided event information.
 	    3. Return the event object.
 	  */
+		System.out.append("HHHHHHHHHHHHHHH");
 		return dal.createEvent(userID, eventTime, poster, name, description, location, tags);
 	}
 

@@ -54,20 +54,23 @@ public class EventController {
 	 * This method handles POST requests with the /events route as attempts to add
 	 * new event information and accesses the DAL to do that.
 	 */
-	@RequestMapping(method = RequestMethod.POST)
+	
+	@RequestMapping(method = RequestMethod.POST, value="api/events/")
 	public JSONObject addEvent(@RequestBody JSONObject body) {
 		/*
 		 * 1. Get EventService instance to create a new event. 2. Retrieve new event
 		 * information 3. Return JSON serialized Event object
 		 */
+		System.out.println("GOT HERE!!!!!!!!!!!!!");
 		int uID = (int) body.get("uID");
 		String description = (String) body.get("description");
-		Timestamp eventTime = (Timestamp) body.get("eventTime");
+		Timestamp eventTime = new Timestamp((long )body.get("eventTime"));
 		String posterUrl = (String) body.get("posterUrl");
 		String name = (String) body.get("name");
 		String location = (String) body.get("location");
 		List<String> tagList = (List<String>) body.get("tags");
 		Set<String> tags = new HashSet<String>(tagList);
+		
 
 		return eventService.addEvent(uID, description, eventTime, posterUrl, name, location, tags);
 	};
@@ -100,7 +103,7 @@ public class EventController {
 	 * This method handles DELETE requests with the /events/eventID route as
 	 * attempts to delete event information and accesses the DAL to do that.
 	 */
-	@RequestMapping(method = RequestMethod.DELETE)
+	@RequestMapping(method = RequestMethod.DELETE, value="api/events/")
 	public void deleteEvent(@RequestBody JSONObject body) {
 		/*
 		 * 1. Get EventService instance to delete an event. 2. retrieve deleted event
@@ -134,7 +137,7 @@ public class EventController {
 	 * This method handles PUT requests with the /events route as attempts to update
 	 * event information and accesses the DAL to do that.
 	 */
-	@RequestMapping(method = RequestMethod.PUT, value = "/{eID}/")
+	@RequestMapping(method = RequestMethod.PUT, value = "api/events/{eID}/")
 	public JSONObject updateEvent(@PathVariable("eID") int eID, @RequestBody JSONObject body) {
 
 		/*
@@ -143,7 +146,7 @@ public class EventController {
 		 */
 		int uID = (int) body.get("uID");
 		String description = (String) body.get("description");
-		Timestamp eventTime = (Timestamp) body.get("eventTime");
+		Timestamp eventTime = new Timestamp((long )body.get("eventTime"));
 		String name = (String) body.get("name");
 		String location = (String) body.get("location");
 		List<String> tagList = (List<String>) body.get("tags");
