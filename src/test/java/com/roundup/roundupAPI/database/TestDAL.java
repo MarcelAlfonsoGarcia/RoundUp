@@ -89,10 +89,6 @@ public class TestDAL {
 		dal = DAL.getInstance();
 	}
 
-	@AfterAll
-	public static void tearDownAfterClass() throws Exception {
-	}
-
 	@SuppressWarnings("unchecked")
 	@Order(1)
 	@Test
