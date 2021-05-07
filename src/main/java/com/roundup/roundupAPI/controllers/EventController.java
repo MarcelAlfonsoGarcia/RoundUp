@@ -176,7 +176,7 @@ public class EventController {
 		 * attempts to retrieve information on events according to tags
 		 */
 		@RequestMapping(method=RequestMethod.GET, value="api/events/tags/")
-		public JSONObject getEventsByTag(@RequestParam LinkedHashMap params) {
+		public JSONObject getEventsByTag(@RequestParam JSONObject params) {
 			List<String> tagList = new ArrayList<>();
 			String[] tagsArray = ((String) params.get("tags")).split(",");
 			for (int i=0; i<tagsArray.length; i++) {
@@ -197,7 +197,7 @@ public class EventController {
 		 * attempts to retrieve information on events according to the owner
 		 */
 		@RequestMapping(method=RequestMethod.GET, value="api/events/owner/{uID}/")
-		public JSONObject getEventsByOwner(@PathVariable ("uID") int uID, @RequestParam LinkedHashMap params) {
+		public JSONObject getEventsByOwner(@PathVariable ("uID") int uID, @RequestParam JSONObject params) {
 			String status = (String) params.get("status");
 			return eventService.getEventsByOwner(uID, status);
 		}
@@ -212,7 +212,7 @@ public class EventController {
 		 * attempts to retrieve information on events according to the specified search
 		 */
 		@RequestMapping(method=RequestMethod.GET, value="api/events/search/")
-		public JSONObject getEventsByName(@RequestParam LinkedHashMap params) {
+		public JSONObject getEventsByName(@RequestParam JSONObject params) {
 			String search = (String) params.get("search");
 			String status = (String) params.get("status");
 			return eventService.getEventsByName(search, status);
