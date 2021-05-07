@@ -104,13 +104,13 @@ public class EventController {
 	 * attempts to delete event information and accesses the DAL to do that.
 	 */
 	@RequestMapping(method = RequestMethod.DELETE, value="api/events/")
-	public void deleteEvent(@RequestBody JSONObject body) {
+	public void deleteEvent(@RequestParam LinkedHashMap params) {
 		/*
 		 * 1. Get EventService instance to delete an event. 2. retrieve deleted event
 		 * information 3. Return JSON serialized Event object
 		 */
-		int eID = (int) body.get("eID");
-		int uID = (int) body.get("uID");
+		int eID = Integer.parseInt((String) params.get("eID"));
+		int uID = Integer.parseInt((String) params.get("uID"));
 
 		eventService.deleteEvent(eID, uID);
 	};
@@ -182,7 +182,7 @@ public class EventController {
 			for (int i=0; i<tagsArray.length; i++) {
 			        tagList.add(tagsArray[i]);
 			}
-			String status = (String) params.get("status");
+			String status = ((String) params.get("status") == null) ? "": (String) params.get("status");
 			Set<String> tags = new HashSet<String>(tagList);
 			return eventService.getEventsByTag(tags, status);
 		}
@@ -198,7 +198,7 @@ public class EventController {
 		 */
 		@RequestMapping(method=RequestMethod.GET, value="api/events/owner/{uID}/")
 		public JSONObject getEventsByOwner(@PathVariable ("uID") int uID, @RequestParam LinkedHashMap params) {
-			String status = (String) params.get("status");
+			String status = ((String) params.get("status") == null) ? "": (String) params.get("status");
 			return eventService.getEventsByOwner(uID, status);
 		}
 		
@@ -214,7 +214,7 @@ public class EventController {
 		@RequestMapping(method=RequestMethod.GET, value="api/events/search/")
 		public JSONObject getEventsByName(@RequestParam LinkedHashMap params) {
 			String search = (String) params.get("search");
-			String status = (String) params.get("status");
+			String status = ((String) params.get("status") == null) ? "": (String) params.get("status");
 			return eventService.getEventsByName(search, status);
 		}
 		

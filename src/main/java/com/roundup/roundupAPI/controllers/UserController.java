@@ -156,6 +156,7 @@ public class UserController {
 		 * 1. Get UserService instance to retrieve user rsvps. 2. Return JSON serialized
 		 * Rsvp objects
 		 */
+		status = (status == null) ? "": status;
 		return userService.getUserRSVPS(email, status);
 	};
 
