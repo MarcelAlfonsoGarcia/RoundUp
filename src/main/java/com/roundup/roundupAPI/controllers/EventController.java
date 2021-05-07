@@ -177,11 +177,12 @@ public class EventController {
 		 */
 		@RequestMapping(method=RequestMethod.GET, value="api/events/tags/")
 		public JSONObject getEventsByTag(@RequestParam JSONObject params) {
-			List<String> tagList = new ArrayList<>();
-			String[] tagsArray = ((String) params.get("tags")).split(",");
-			for (int i=0; i<tagsArray.length; i++) {
-			        tagList.add(tagsArray[i]);
-			}
+//			List<String> tagList = new ArrayList<>();
+//			String[] tagsArray = ((String) params.get("tags")).split(",");
+//			for (int i=0; i<tagsArray.length; i++) {
+//			        tagList.add(tagsArray[i]);
+//			}
+			List<String> tagList = (List<String>) params.get("tags");
 			String status = (String) params.get("status");
 			Set<String> tags = new HashSet<String>(tagList);
 			return eventService.getEventsByTag(tags, status);
