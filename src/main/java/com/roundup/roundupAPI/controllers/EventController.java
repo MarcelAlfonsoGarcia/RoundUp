@@ -199,6 +199,7 @@ public class EventController {
 		@RequestMapping(method=RequestMethod.GET, value="api/events/owner/{uID}/")
 		public JSONObject getEventsByOwner(@PathVariable ("uID") int uID, @RequestParam LinkedHashMap params) {
 			String status = ((String) params.get("status") == null) ? "": (String) params.get("status");
+
 			return eventService.getEventsByOwner(uID, status);
 		}
 		
@@ -212,7 +213,7 @@ public class EventController {
 		 * attempts to retrieve information on events according to the specified search
 		 */
 		@RequestMapping(method=RequestMethod.GET, value="api/events/search/")
-		public JSONObject getEventsByName(@RequestParam LinkedHashMap params) {
+		public JSONObject getEventsByName(@RequestParam JSONObject params) {
 			String search = (String) params.get("search");
 			String status = ((String) params.get("status") == null) ? "": (String) params.get("status");
 			return eventService.getEventsByName(search, status);
