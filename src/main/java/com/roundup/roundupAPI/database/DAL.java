@@ -901,9 +901,9 @@ public class DAL {
 			event.put("eID", rs.getInt("eID"));
 			event.put("owner", rs.getInt("owner"));
 			event.put("name", rs.getString("name"));
-			event.put("eventTime", rs.getTimestamp("eventTime"));
-			event.put("description", rs.getString("description"));
-			event.put("location", rs.getString("location"));
+//			event.put("eventTime", rs.getTimestamp("eventTime"));
+//			event.put("description", rs.getString("description"));
+//			event.put("location", rs.getString("location"));
 			event.put("posterUrl", rs.getString("posterUrl"));
 			
 
