@@ -8,6 +8,7 @@ import static org.junit.jupiter.api.Assertions.*;
 import java.sql.Timestamp;
 import java.util.Arrays;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 import org.json.simple.JSONArray;
@@ -220,7 +221,7 @@ public class TestDAL {
 	}
 
 	@Test
-	@Order(44)
+	@Order(45)
 	public void deleteExistingUser() {
 		dal.deleteUser(userOneId);
 		Exception e = assertThrows(NullPointerException.class, () -> {
@@ -236,7 +237,7 @@ public class TestDAL {
 	}
 
 	@Test
-	@Order(45)
+	@Order(46)
 	public void deleteUnknownUser() {
 		Exception e = assertThrows(NullPointerException.class, () -> {
 			dal.deleteUser(0);
@@ -378,7 +379,7 @@ public class TestDAL {
 	}
 
 	@Test
-	@Order(42)
+	@Order(43)
 	public void deleteEvents() {
 		dal.deleteEvent(eventOneId, userOneId);
 		Exception e = assertThrows(NullPointerException.class, () -> {
@@ -394,7 +395,7 @@ public class TestDAL {
 	}
 
 	@Test
-	@Order(43)
+	@Order(44)
 	public void deleteUnknownEvent() {
 		Exception e = assertThrows(NullPointerException.class, () -> {
 			dal.deleteEvent(eventOneId, userOneId);
@@ -566,7 +567,8 @@ public class TestDAL {
 
 		boolean fullyContained = true;
 		for (int i = 0; i < tagsArray.size(); i++) {
-			fullyContained = fullyContained && tagSet.contains((String) tagsArray.get(i));
+			String s = (String) tagsArray.get(i);
+			fullyContained = fullyContained && tagSet.contains(s);
 		}
 		assertTrue(fullyContained);
 	}
@@ -603,6 +605,8 @@ public class TestDAL {
 	public void subscribeToKnownUser() {
 		dal.subscribeTo(userOneId, userTwoId);
 		dal.subscribeTo(userTwoId, userOneId);
+		
+		assertTrue(compareUserLists(userSearchResult, dal.retrieveSubscriptions(userTwoId)));
 	}
 
 	@Test
@@ -642,6 +646,10 @@ public class TestDAL {
 	public void unsubcribeFromExistingRelationship() {
 		dal.unsubscribeFrom(userOneId, userTwoId);
 		dal.unsubscribeFrom(userTwoId, userOneId);
+		
+		JSONObject noSubscriptions = dal.retrieveSubscriptions(userTwoId);
+		List<String> emptyList = (List<String>) noSubscriptions.get("users");
+		assertTrue(emptyList.isEmpty());
 	}
 
 	@Test
@@ -658,10 +666,22 @@ public class TestDAL {
 	public void rsvpToExistingEvent() {
 		dal.rsvpTo(USER_ONE_EMAIL, USER_ONE_FIRST_NAME, eventTwoId, EVENT_ONE_TIME);
 		dal.rsvpTo(USER_TWO_EMAIL, USER_TWO_FIRST_NAME, eventOneId, EVENT_TWO_TIME);
+		
+		assertTrue(compareEventLists(eventSearchResult, dal.retrieveRsvpdEvents(USER_TWO_EMAIL, "")));
 	}
 
 	@Test
 	@Order(36)
+	public void rsvpToUnknownEvent() {
+		Exception e = assertThrows(NullPointerException.class, () -> {
+			dal.rsvpTo("asd", USER_ONE_FIRST_NAME, 0, EVENT_ONE_TIME);
+		});
+		
+		assertTrue(e.getMessage().contains("Detail: Key (event)=(0) is not present in table \"events\"."));
+	}
+	
+	@Test
+	@Order(37)
 	public void rsvpWithNullEmail() {
 		Exception e = assertThrows(IllegalArgumentException.class, () -> {
 			dal.rsvpTo("", USER_ONE_FIRST_NAME, eventTwoId, EVENT_ONE_TIME);
@@ -670,7 +690,7 @@ public class TestDAL {
 	}
 
 	@Test
-	@Order(37)
+	@Order(38)
 	public void rsvpTwice() {
 		Exception e = assertThrows(NullPointerException.class, () -> {
 			dal.rsvpTo(USER_ONE_EMAIL, USER_ONE_FIRST_NAME, eventTwoId, EVENT_ONE_TIME);
@@ -681,26 +701,31 @@ public class TestDAL {
 	}
 
 	@Test
-	@Order(38)
+	@Order(39)
 	public void retrieveRsvpdEvents() {
 		assertTrue(compareEventLists(eventSearchResult, dal.retrieveRsvpdEvents(USER_TWO_EMAIL, "")));
 	}
 
 	@Test
-	@Order(39)
+	@Order(40)
 	public void retrieveAttendeesList() {
 		assertTrue(compareUserLists(userSearchResult, dal.retrieveAttendees(eventTwoId)));
 	}
 
 	@Test
-	@Order(40)
+	@Order(41)
 	public void unRsvpFromKnownEvent() {
 		dal.unRsvpFrom(USER_ONE_EMAIL, eventTwoId);
 		dal.unRsvpFrom(USER_TWO_EMAIL, eventOneId);
+		
+		Exception e = assertThrows(NullPointerException.class, () -> {
+			dal.unRsvpFrom(USER_ONE_EMAIL, eventTwoId);
+		});
+		assertEquals("User is not RSVPd to this event", e.getMessage());
 	}
 
 	@Test
-	@Order(41)
+	@Order(42)
 	public void unRsvpFromUnknownEvent() {
 		Exception e = assertThrows(NullPointerException.class, () -> {
 			dal.unRsvpFrom(USER_ONE_EMAIL, eventTwoId);
