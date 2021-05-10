@@ -503,6 +503,7 @@ public class TestDAL {
 		tagSet.add("Environmental Analysis");
 		tagSet.add("French");
 		tagSet.add("Gender & Women Studies");
+		tagSet.add("Gender & Womens Studies");
 		tagSet.add("Geology");
 		tagSet.add("German Studies");
 		tagSet.add("History");
