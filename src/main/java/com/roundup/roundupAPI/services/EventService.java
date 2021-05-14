@@ -2,9 +2,7 @@ package com.roundup.roundupAPI.services;
 
 import java.sql.Timestamp;
 import java.util.Set;
-
 import org.json.simple.JSONObject;
-import org.springframework.stereotype.Service;
 
 import com.roundup.roundupAPI.database.DAL;
 
@@ -12,10 +10,26 @@ import com.roundup.roundupAPI.database.DAL;
 This class calls the data access layer and performs the desired operations to
 retrieve event information from the database.
 */
-@Service
+//@Service
 public class EventService {
+	private DAL dal;
 	
-	private DAL dal = DAL.getInstance();
+	public static EventService instance;
+	
+	public EventService() {
+		if (dal == null) {
+			dal = DAL.getInstance();
+		}
+	}
+	
+	public static EventService getInstance() {
+		if (instance == null) {
+			instance = new EventService();
+		}
+		return instance;
+	}
+	
+	
 	/**
 	  @param userId: the ID of the user who is creating the event
 	  @param description: the description of the event to be created
@@ -35,7 +49,6 @@ public class EventService {
 	    2. Create an event object with the provided event information.
 	    3. Return the event object.
 	  */
-		System.out.append("HHHHHHHHHHHHHHH");
 		return dal.createEvent(userID, eventTime, poster, name, description, location, tags);
 	}
 

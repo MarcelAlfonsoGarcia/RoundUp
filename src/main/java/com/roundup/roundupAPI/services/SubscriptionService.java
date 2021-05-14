@@ -9,10 +9,24 @@ import com.roundup.roundupAPI.database.DAL;
 This class calls the data access layer and performs the desired operations to
 retrieve subscription information from the database.
 */
-@Service
+//@Service
 public class SubscriptionService {
-
-	public static DAL dal = DAL.getInstance();
+	private DAL dal;
+	
+	public static SubscriptionService instance;
+	
+	public SubscriptionService() {
+		if (dal == null) {
+			dal = DAL.getInstance();
+		}
+	}
+	
+	public static SubscriptionService getInstance() {
+		if (instance == null) {
+			instance = new SubscriptionService();
+		}
+		return instance;
+	}
 
 	/**
 	 * @param followerID: the id of the user who is doing the following

@@ -23,8 +23,8 @@ public class RSVPController {
 	/*
 	 * An instance of the rsvp service
 	 */
-	@Autowired
-	private RSVPService rsvpService;
+//	@Autowired
+	private RSVPService rsvpService = RSVPService.getInstance();
 
 	/*
 	 * @param eventID: the id of the associated event
@@ -45,7 +45,7 @@ public class RSVPController {
 		String email = (String) body.get("email");
 		String name = (String) body.get("name");
 		int eID = (int) body.get("eID");
-		Timestamp time = new Timestamp(System.currentTimeMillis());
+		Timestamp time = new Timestamp((long) body.get("time"));
 		
 		rsvpService.addRsvp(email, name, eID, time);
 	};

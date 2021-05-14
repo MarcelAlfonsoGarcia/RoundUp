@@ -1,19 +1,32 @@
 package com.roundup.roundupAPI.services;
 
 import org.json.simple.JSONObject;
-import org.springframework.stereotype.Service;
+import java.util.Base64;
 
 import com.roundup.roundupAPI.database.DAL;
-
-import java.util.Base64;
 
 /*
 This class calls the data access layer and performs the desired operations to
 retrieve user information from the database.
 */
-@Service
+//@Service
 public class UserService {
-	private DAL dal = DAL.getInstance();
+	private DAL dal; 
+	
+	public static UserService instance;
+	
+	public UserService() {
+		if (dal == null) {
+			dal = DAL.getInstance();
+		}
+	}
+	
+	public static UserService getInstance() {
+		if (instance == null) {
+			instance = new UserService();
+		}
+		return instance;
+	}
 	
 	/**
 	 * @param firstName: the first name of the new user
@@ -57,7 +70,6 @@ public class UserService {
 			 String auth = email + ":" + password;
 			 String token = Base64.getEncoder().encodeToString(auth.getBytes());
 			 userInfo.put("token", token);
-			 System.out.println(userInfo);
 			 return userInfo;
 		 } catch (Exception e) {
 			 e.printStackTrace();

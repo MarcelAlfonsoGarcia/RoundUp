@@ -9,10 +9,24 @@ import com.roundup.roundupAPI.database.DAL;
 This class calls the data access layer and performs the desired operations to
 retrieve rsvp information from the database.
 */
-@Service
 public class RSVPService {
 	
-	private DAL dal = DAL.getInstance();
+	private DAL dal;
+	
+	public static RSVPService instance;
+	
+	public RSVPService() {
+		if (dal == null) {
+			dal = DAL.getInstance();
+		}
+	}
+	
+	public static RSVPService getInstance() {
+		if (instance == null) {
+			instance = new RSVPService();
+		}
+		return instance;
+	}
 	/**
 	    @param email: the email of the user who is rsvp'ing
 	    @param name: the name of the user who is rsvp'ing

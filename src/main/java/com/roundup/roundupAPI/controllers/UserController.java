@@ -15,8 +15,8 @@ import com.roundup.roundupAPI.services.UserService;
 @RestController
 public class UserController {
 
-	@Autowired
-	private UserService userService;
+//	@Autowired
+	private UserService userService = UserService.getInstance();
 
 	@RequestMapping(method = RequestMethod.POST, value = "api/users/")
 	public JSONObject createUser(@RequestBody JSONObject body) {
@@ -53,7 +53,7 @@ public class UserController {
 		 */
 		String email = (String) body.get("email");
 		String password = (String) body.get("password");
-		return userService.login(email, password);
+		return  userService.login(email, password);
 	  };
 	  
 	
@@ -135,6 +135,7 @@ public class UserController {
 		String lastName = (String) body.get("lastName");
 		String email = (String) body.get("email");
 		String campus = (String) body.get("campus");
+
 
 		return userService.updateUser(uID, firstName, lastName, email, campus);
 	};

@@ -18,8 +18,8 @@ public class SubscriptionController {
 	/*
 	 * An instance of the subscription service
 	 */
-	@Autowired
-	private SubscriptionService subscriptionService;
+//	@Autowired
+	private SubscriptionService subscriptionService = SubscriptionService.getInstance();
 
 	/*
 	 * @param followerID: the id of the user who's doing the following

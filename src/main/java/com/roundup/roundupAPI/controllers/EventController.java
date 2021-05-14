@@ -1,6 +1,7 @@
 package com.roundup.roundupAPI.controllers;
 
 import java.sql.Timestamp;
+
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
@@ -9,7 +10,6 @@ import java.util.Set;
 
 import org.json.simple.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.ComponentScan;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -31,8 +31,8 @@ public class EventController {
 	/*
 	 * An instance of the event service
 	 */
-	@Autowired
-	private EventService eventService;
+//	@Autowired
+	private EventService eventService = EventService.getInstance();
 
 	/*
 	 * @param userID: the userID of the associated owner
@@ -61,8 +61,7 @@ public class EventController {
 		 * 1. Get EventService instance to create a new event. 2. Retrieve new event
 		 * information 3. Return JSON serialized Event object
 		 */
-		System.out.println("GOT HERE!!!!!!!!!!!!!");
-		int uID = (int) body.get("uID");
+		int uID = body.get("uID") == null ? (int) body.get("owner") : (int) body.get("uID");
 		String description = (String) body.get("description");
 		Timestamp eventTime = new Timestamp((long )body.get("eventTime"));
 		String posterUrl = (String) body.get("posterUrl");
@@ -213,7 +212,7 @@ public class EventController {
 		 * attempts to retrieve information on events according to the specified search
 		 */
 		@RequestMapping(method=RequestMethod.GET, value="api/events/search/")
-		public JSONObject getEventsByName(@RequestParam JSONObject params) {
+		public JSONObject getEventsByName(@RequestParam LinkedHashMap<String, String> params) {
 			String search = (String) params.get("search");
 			String status = ((String) params.get("status") == null) ? "": (String) params.get("status");
 			return eventService.getEventsByName(search, status);
@@ -244,8 +243,8 @@ public class EventController {
 	 * attempts to retrieve information on event attendees and accesses the DAL to
 	 * do that.
 	 */
-	@RequestMapping(method = RequestMethod.GET, value = "/{eID}/attendees/")
-	public JSONObject getAttendees(@PathVariable("eID") int eID) {
+	@RequestMapping(method = RequestMethod.GET, value = "api/events/{eID}/attendees/")
+	public JSONObject getEventAttendees(@PathVariable("eID") int eID) {
 		/*
 		 * 1. Get EventService instance to retrieve event attendees. 2. Return JSON
 		 * serialized User objects
