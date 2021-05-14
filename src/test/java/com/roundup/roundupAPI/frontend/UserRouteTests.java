@@ -79,7 +79,7 @@ public class UserRouteTests {
 	@SuppressWarnings("unchecked")
 	@Test
 	@Order(1)
-	public void loginWithFalseCredentials() throws Exception {
+	public void loginWithFalseCredentialsTest() throws Exception {
 		JSONObject body = convertStringToJSONObject(userOne.toJSONString());
 		body.put("password", USER_ONE_PASSWORD);
 		RequestBuilder loginRequest = MockMvcRequestBuilders.post("/api/users/login/").contentType(APPLICATION_JSON_UTF8).content(body.toJSONString());
@@ -91,7 +91,7 @@ public class UserRouteTests {
 	@SuppressWarnings({ "deprecation", "unchecked" })
 	@Test
 	@Order(2)
-	public void registerNewUserTest() throws Exception {
+	public void registerNonExistingUserTest() throws Exception {
 		JSONObject body = convertStringToJSONObject(userOne.toJSONString());
 		body.put("password", USER_ONE_PASSWORD);
 		
@@ -165,7 +165,7 @@ public class UserRouteTests {
 	public void getUserDetailsWithValidTokenTest() throws Exception {
     	String auth = USER_ONE_EMAIL + ":" + USER_ONE_PASSWORD;
 		String token = Base64.getEncoder().encodeToString(auth.getBytes());
-		RequestBuilder request = MockMvcRequestBuilders.get("/api/users/" + userOneId + "/").header("Authorization", "Basic " + token);
+		RequestBuilder request = MockMvcRequestBuilders.get("/api/users/").header("Authorization", "Basic " + token);
 		MvcResult result = mockMvc.perform(request).andReturn();
 		JSONObject resultJson = convertStringToJSONObject(result.getResponse().getContentAsString());
 		assertTrue(compareUsers(userOne, resultJson));
@@ -201,7 +201,7 @@ public class UserRouteTests {
 
 	@Test
 	@Order(7)
-	public void getUserRSVPS() throws Exception {
+	public void getExistingUserRSVPSTest() throws Exception {
 		RequestBuilder getUserRSVPSRequest = MockMvcRequestBuilders.get("/api/users/" + USER_ONE_EMAIL + "/rsvps/" + 
 	"'active'/");
 		MvcResult result = mockMvc.perform(getUserRSVPSRequest).andReturn();
@@ -211,7 +211,7 @@ public class UserRouteTests {
 
 	@Test
 	@Order(7)
-	public void getUserSubscriptions() throws Exception {
+	public void getExistingUserSubscriptionsTest() throws Exception {
 		RequestBuilder getUserSubscriptionsRequest = MockMvcRequestBuilders.get("/api/users/" + userOneId + "/subscriptions/");
 		MvcResult result = mockMvc.perform(getUserSubscriptionsRequest).andReturn();
 		JSONArray subscriptions = (JSONArray) convertStringToJSONObject(result.getResponse().getContentAsString()).get("subscriptions");
@@ -220,7 +220,7 @@ public class UserRouteTests {
 
 	@Test
 	@Order(7)
-	public void getUserSubscribers() throws Exception {
+	public void getExistingUserSubscribersTest() throws Exception {
 		RequestBuilder getUserSubscribersRequest = MockMvcRequestBuilders.get("/api/users/" + userOneId + "/subscribers/");
 		MvcResult result = mockMvc.perform(getUserSubscribersRequest).andReturn();
 		JSONArray subscribers = (JSONArray) convertStringToJSONObject(result.getResponse().getContentAsString()).get("users");

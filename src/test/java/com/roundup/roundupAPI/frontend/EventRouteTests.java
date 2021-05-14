@@ -124,7 +124,6 @@ public class EventRouteTests {
 		Exception exception = assertThrows(NestedServletException.class, ()-> {
 			mockMvc.perform(deleteEventRequest);
 		});
-//		System.out.println(exception.getMessage());
 		assertTrue(exception.getMessage().endsWith("No event exists under the provided information"));
 	};
 
@@ -142,7 +141,7 @@ public class EventRouteTests {
 	@SuppressWarnings({"unchecked" })
 	@Test
 	@Order(3)
-	public void updateNonExistingEvent() throws Exception {
+	public void updateNonExistingEventDetailsTest() throws Exception {
 		JSONObject body = convertStringToJSONObject(eventOne.toJSONString());
 		body.put("name", "Temp Name");
 		RequestBuilder updateEventOneRequest = MockMvcRequestBuilders.put("/api/events/" + eventOneId + "/").contentType(APPLICATION_JSON_UTF8).content(body.toJSONString());
@@ -157,7 +156,7 @@ public class EventRouteTests {
 	@SuppressWarnings({ "deprecation", "unchecked" })
 	@Test
 	@Order(4)
-	public void addNonexistingEventTest() throws Exception {
+	public void addNonExistingEventTest() throws Exception {
 		RequestBuilder addEventOneRequest = MockMvcRequestBuilders.post("/api/events/").contentType(APPLICATION_JSON_UTF8).content(eventOne.toJSONString());
 		MvcResult result = mockMvc.perform(addEventOneRequest).andReturn();
 		JSONObject resultJson = convertStringToJSONObject(result.getResponse().getContentAsString());
@@ -172,11 +171,22 @@ public class EventRouteTests {
 		assertTrue(compareEvents(eventTwo, resultJson));
 		eventTwoId = new Long((long) resultJson.get("eID"));
 	};
+	
+	
+	@Test
+	@Order(5)
+	public void addExistingEventTest() throws Exception {
+		RequestBuilder addEventOneRequest = MockMvcRequestBuilders.post("/api/events/").contentType(APPLICATION_JSON_UTF8).content(eventOne.toJSONString());
+		Exception exception = assertThrows(NestedServletException.class, ()-> {
+			mockMvc.perform(addEventOneRequest);
+		});
+		assertTrue(exception.getMessage().endsWith("already exists."));
+	};
 
 	@SuppressWarnings({"unchecked" })
 	@Test
-	@Order(5)
-	public void getExistingEvent() throws Exception {
+	@Order(6)
+	public void getExistingEventDetailsTest() throws Exception {
 		RequestBuilder getEventOneRequest = MockMvcRequestBuilders.get("/api/events/" + eventOneId + "/");
 		MvcResult result = mockMvc.perform(getEventOneRequest).andReturn();
 		JSONObject resultJson = convertStringToJSONObject(result.getResponse().getContentAsString());
@@ -193,8 +203,8 @@ public class EventRouteTests {
 
 	@SuppressWarnings({"unchecked" })
 	@Test
-	@Order(6)
-	public void updateExistingEvent() throws Exception {
+	@Order(7)
+	public void updateExistingEventDetailsTest() throws Exception {
 		JSONObject body = convertStringToJSONObject(eventOne.toJSONString());
 		body.put("name", "Temp Name");
 		RequestBuilder updateEventOneRequest = MockMvcRequestBuilders.put("/api/events/" + eventOneId + "/").contentType(APPLICATION_JSON_UTF8).content(body.toJSONString());
@@ -213,8 +223,8 @@ public class EventRouteTests {
 
 	@SuppressWarnings("rawtypes")
 	@Test
-	@Order(7)
-	public void getAllTags() throws Exception {
+	@Order(8)
+	public void getAllTagsTest() throws Exception {
 		RequestBuilder getAllTagsRequest = MockMvcRequestBuilders.get("/api/tags/");
 		MvcResult result = mockMvc.perform(getAllTagsRequest).andReturn();
 		JSONObject resultJson = convertStringToJSONObject(result.getResponse().getContentAsString());
@@ -224,11 +234,11 @@ public class EventRouteTests {
 
 	@SuppressWarnings({ "rawtypes", "unchecked" })
 	@Test
-	@Order(8)
-	public void getEventsByExistingTag() throws Exception {
+	@Order(9)
+	public void getEventsByExistingTagTest() throws Exception {
 		MultiValueMap params = new LinkedMultiValueMap<>();
 		params.add("tags", "test");
-		params.add("status", "");
+		params.add("status", "'active'");
 
 		RequestBuilder getEventsByTagsRequest = MockMvcRequestBuilders.get("/api/events/tags/").params(params);
 		MvcResult result = mockMvc.perform(getEventsByTagsRequest).andReturn();
@@ -241,10 +251,10 @@ public class EventRouteTests {
 
 	@SuppressWarnings({ "rawtypes", "deprecation", "unchecked" })
 	@Test
-	@Order(9)
-	public void getEventsByExistingOwner() throws Exception {
+	@Order(10)
+	public void getEventsByExistingOwnerTest() throws Exception {
 		MultiValueMap params = new LinkedMultiValueMap<>();
-		params.add("status", "");
+		params.add("status", "'active'");
 
 		RequestBuilder getEventsByOwnerOneRequest = MockMvcRequestBuilders.get("/api/events/owner/" + USER_ONE_ID + "/").params(params);
 		MvcResult result = mockMvc.perform(getEventsByOwnerOneRequest).andReturn();
@@ -262,8 +272,8 @@ public class EventRouteTests {
 	
 	@SuppressWarnings({ "rawtypes", "unchecked" })
 	@Test
-	@Order(10)
-	public void getEventsByExistingName() throws Exception {
+	@Order(11)
+	public void getEventsByExistingNameTest() throws Exception {
 		MultiValueMap params = new LinkedMultiValueMap<>();
 		params.add("search", "" + EVENT_ONE_NAME);
 		params.add("status", "'active'");
@@ -277,8 +287,8 @@ public class EventRouteTests {
 	
 	@SuppressWarnings({ "rawtypes", "unchecked" })
 	@Test
-	@Order(11)
-	public void getEventsByExistingTime() throws Exception {
+	@Order(12)
+	public void getEventsByTimeframeTest() throws Exception {
 		MultiValueMap params = new LinkedMultiValueMap<>();
 		params.add("fromTime", "" + (EVENT_ONE_TIME - 24*60*60*1000));
 		params.add("toTime", "" + (EVENT_ONE_TIME + 24*60*60*1000));
@@ -291,8 +301,8 @@ public class EventRouteTests {
 		
 
 	@Test
-	@Order(12)
-	public void getExistingEventAttendees() throws Exception {
+	@Order(13)
+	public void getExistingEventAttendeesTest() throws Exception {
 		RequestBuilder getEventAttendeesRequest = MockMvcRequestBuilders.get("/api/events/" + eventOneId + "/attendees/");
 		MvcResult result = mockMvc.perform(getEventAttendeesRequest).andReturn();
 		JSONArray users = (JSONArray) convertStringToJSONObject(result.getResponse().getContentAsString()).get("users");
@@ -301,7 +311,7 @@ public class EventRouteTests {
 
 	@SuppressWarnings({ "unchecked", "rawtypes" })
 	@Test
-	@Order(13)
+	@Order(14)
 	public void deleteExistingEventTest() throws Exception {
 		MultiValueMap params = new LinkedMultiValueMap<>();
 		params.add("eID", "" + eventOneId);
