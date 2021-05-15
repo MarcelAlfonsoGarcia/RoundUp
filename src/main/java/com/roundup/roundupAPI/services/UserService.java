@@ -11,17 +11,25 @@ retrieve user information from the database.
 */
 //@Service
 public class UserService {
+	// an instance of the Data Access layer component
 	private DAL dal; 
 	
+	// a single instance of the class that is used by external components
 	public static UserService instance;
 	
+	// a constructor for the class
 	public UserService() {
+		// retrieves an instance for the DAL if one does not exist
 		if (dal == null) {
 			dal = DAL.getInstance();
 		}
 	}
 	
+	// a method that retrieves the instance of the class
 	public static UserService getInstance() {
+		// 1. creates an instance for the DAL if one does not exist
+
+	    // 2. return class instance.
 		if (instance == null) {
 			instance = new UserService();
 		}

@@ -10,18 +10,25 @@ This class calls the data access layer and performs the desired operations to
 retrieve rsvp information from the database.
 */
 public class RSVPService {
-	
+	// an instance of the Data Access layer component
 	private DAL dal;
 	
+	// a single instance of the class that is used by external components
 	public static RSVPService instance;
 	
+	// a constructor for the class
 	public RSVPService() {
+		// retrieves an instance for the DAL if one does not exist
 		if (dal == null) {
 			dal = DAL.getInstance();
 		}
 	}
 	
+	// a method that retrieves the instance of the class
 	public static RSVPService getInstance() {
+	    // 1. creates an instance for the DAL if one does not exist
+
+	    // 2. return class instance.
 		if (instance == null) {
 			instance = new RSVPService();
 		}
@@ -37,8 +44,6 @@ public class RSVPService {
 	public void addRsvp(String email, String name, int eventID, Timestamp time){
 	  /*
 	    1. Pass the rsvp information to the data access layer and tell it to add a new rsvp to the database.
-	    2. Create an rsvp object with the provided rsvp information.
-	    3. Return the rsvp object.
 	  */		
 		// performing operation
 		dal.rsvpTo(email, name, eventID, time);
@@ -54,9 +59,7 @@ public class RSVPService {
 	public void deleteRsvp(String email, int eventID) {
 	  /*
 	    1. Pass the rsvp id to the data access layer and tell it to delete the rsvp from the database.
-	    2. Create an rsvp object with the provided rsvp information.
-	    3. Return the RSVP object.
 	  */
-		dal.unRsvpFrom(email, eventID);;
+		dal.unRsvpFrom(email, eventID);
 	};
 }

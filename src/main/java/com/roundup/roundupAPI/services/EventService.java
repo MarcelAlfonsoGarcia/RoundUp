@@ -12,17 +12,25 @@ retrieve event information from the database.
 */
 //@Service
 public class EventService {
+	// an instance of the Data Access layer component
 	private DAL dal;
 	
+	// a single instance of the class that is used by external components
 	public static EventService instance;
 	
+	// a constructor for the class
 	public EventService() {
+		// retrieves an instance for the DAL if one does not exist
 		if (dal == null) {
 			dal = DAL.getInstance();
 		}
 	}
 	
+	// a method that retrieves the instance of the class
 	public static EventService getInstance() {
+		// 1. creates an instance for the DAL if one does not exist
+
+	    // 2. return class instance.
 		if (instance == null) {
 			instance = new EventService();
 		}
@@ -68,7 +76,6 @@ public class EventService {
 	}
 
 	/**
-<<<<<<< HEAD
 	  @param eventId:  the id of the event to be updated
 	  @param userId: the user id of the user trying to update the event
 	  @param description: the new description for the event
@@ -101,8 +108,6 @@ public class EventService {
 	public void deleteEvent(int eventID, int userID) {
 	  /*
 	    1. Pass the event id to the data access layer and tell it to delete the event from the database.
-	    2. Create an event object with the provided event information.
-	    3. Return the Event object.
 	  */
 		dal.deleteEvent(eventID, userID);
 	}
